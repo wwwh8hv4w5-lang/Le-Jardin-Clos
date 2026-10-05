@@ -26,6 +26,7 @@
           <label class="dk-field">Suivre <select id="dkFollow"></select></label>
           <button class="toggle" id="dkLock" type="button"></button>
           <button class="toggle" id="dkTouch" type="button"></button>
+          <button class="toggle" id="dkRoutine" type="button"></button>
         </div>
         <div>
           <h4>Autonomie</h4>
@@ -46,6 +47,11 @@
           <p class="note">En mode autonome, elle ne propose jamais d'elle-même : c'est toujours vous qui décidez.</p>
         </div>
       </div>
+    </section>
+    <section class="dk-plan"><h3>Son scénario sur plusieurs jours</h3>
+      <div class="ctl-row"><label class="dk-field">Jour <input type="number" id="dkPlanDay" min="1" max="60" value="1" style="width:5em"></label><label class="dk-field">Pour <select id="dkPlanWho"></select></label><label class="dk-field">Objectif <select id="dkPlanGoal"></select></label><button class="btn small" id="dkPlanAdd" type="button">Ajouter</button></div>
+      <ul id="dkPlan" class="dk-log"></ul>
+      <p class="note">Chaque jour, l'objectif programmé remplace celui de la fiche, et elle l'enchaîne d'elle-même.</p>
     </section>
     <section class="dk-think"><h3>Ce que pense Léna</h3><div id="dkThink"><p>Le mode autonome est coupé : elle n'agit que sur vos ordres.</p></div></section>
     <section class="dk-act">
@@ -90,7 +96,7 @@
   </div>
 </div>
 
-<title>Le Jardin clos v0.86</title>
+<title>Le Jardin clos v0.92</title>
 <!--
   STRUCTURE DU JEU — chaque fichier a un seul rôle :
     style.css               mise en page et couleurs de la page
@@ -125,6 +131,7 @@
     js/mindlife.js          souvenirs involontaires, compte des jours, ennui, langage du corps, gestes, voix, monde au loin
     js/house.js             maison équipée (ampoule, lavabo, douche, toilettes), lampadaire, lampe de poche, hache, allumettes, portail
     js/outside.js           sortir du jardin par le portail ouvert : chemin, route, puits, étang, champs, forêt, village
+    js/interpreter-local.js traducteur de secours : paroles toujours prononcées, actions réparées, lecture du récit si la traduction échoue
     js/ai.js                prompt et décisions de l'IA (une boucle par personnage)
     js/thoughts.js          pensée continue : monologue intérieur en direct
     js/ui.js                boutons, fiches des personnages, badge jour/nuit
@@ -143,6 +150,11 @@
     js/logo-data.js         logo du studio (image intégrée)
     js/puppet.js            le pantin : une jeune femme incarnée par l'observateur (déplacement, parole, visage, gestes)
     js/lena-brain.js        cerveau de Léna : ses sens en direct, sa théorie de l'esprit, ses objectifs, la régie
+    js/encounters.js        les villageois remarquent et abordent les personnages sortis du jardin
+    js/consolidation.js     la mémoire se consolide la nuit en souvenirs durables
+    js/traces.js            mots écrits et signes gravés qui restent dans le monde
+    js/scenarios.js         éditeur de scénarios (chaque événement avec sa cause)
+    js/diagnostic.js        diagnostic de l'illusion, résumé du jour, caméra automatique, sous-titres
     js/menu.js              cinématique du studio F.S.M Game House et menu principal
     js/main.js              démarrage et boucle
   L'ordre des <script> ci-dessous compte : un fichier peut utiliser ce que les précédents définissent.
@@ -559,18 +571,34 @@ header.top { display: flex; justify-content: space-between; align-items: baselin
 .dk-check { display: flex; align-items: center; gap: 6px; }
 .menu.choosing .menu-fence { opacity: .1; transition: opacity .3s; }
 
+/* ---------- v0.87 ---------- */
+.stage { position: relative; }
+.subtitle { position: absolute; left: 50%; bottom: 58px; transform: translateX(-50%); max-width: 88%; background: rgba(15,18,20,.78); color: #fff; font-size: 14px; line-height: 1.35; padding: 6px 12px; border-radius: 8px; text-align: center; pointer-events: none; z-index: 3; }
+.summary p { margin: 4px 0; font-size: 13.5px; } .summary ul { margin: 4px 0; padding-left: 18px; font-size: 13px; }
+.diag { list-style: none; padding: 0; margin: 8px 0 0; font-size: 13px; }
+.diag li { padding: 4px 0; border-bottom: 1px solid var(--line); }
+.diag b { display: inline-block; min-width: 6.5em; }
+.diag-vert b { color: #2f8f5b; } .diag-orange b { color: #c27a1c; } .diag-rouge b { color: #c0392b; }
+#scEditor input[type="number"] { width: 4.5em; }
+#scEditor input[type="text"], #scEditor textarea { font: inherit; font-size: 14px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; box-sizing: border-box; }
+#scEditor textarea { width: 100%; }
+.sc-item { border: 1px solid var(--line); border-radius: 8px; padding: 8px; margin: 6px 0; }
+.sc-head { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; } .sc-head b { margin-right: auto; }
+.sc-item ol { margin: 6px 0 0; padding-left: 20px; font-size: 13px; } .sc-item li.done { color: var(--muted); }
+@media (min-width: 820px) { .dk-plan { grid-column: span 3; } }
+
 </style>
 <div class="wrap">
  <div class="col-view">
   <header class="top">
-    <h1>Le Jardin clos <span class="version" id="version">v0.86</span></h1>
+    <h1>Le Jardin clos <span class="version" id="version">v0.92</span></h1>
     <button class="btn ghost small menu-open" id="menuOpen" type="button">Menu</button>
     <button class="btn ghost small" id="lenaOpen" type="button">Léna</button>
     <span class="clock" id="clock">Jour 1 · 08:00</span>
   </header>
   <p class="note" id="intro">Deux jeunes de 18 ans qui ne se connaissent pas se réveillent dans ce jardin clos, sans savoir comment ils y sont arrivés. Chacun a sa propre IA qui décide de ce qu'il fait, pense et dit. Vous observez, et vous pouvez intervenir.</p>
 
-  <div class="stage"><div class="sky" id="sky" aria-hidden="true"></div><div class="caption" id="caption" aria-live="polite" hidden></div><canvas id="cv" aria-label="Vue du jardin et de la vaste campagne alentour : clôture, un arbre fruitier, un rocher, des fleurs, une rivière, une cabane et une boîte aux lettres"></canvas></div>
+  <div class="stage"><div class="sky" id="sky" aria-hidden="true"></div><div class="caption" id="caption" aria-live="polite" hidden></div><div class="subtitle" id="subtitle" aria-live="polite" hidden></div><canvas id="cv" aria-label="Vue du jardin et de la vaste campagne alentour : clôture, un arbre fruitier, un rocher, des fleurs, une rivière, une cabane et une boîte aux lettres"></canvas></div>
 
   <section class="band" id="thoughtBand" aria-label="Pensées en direct" aria-live="polite"></section>
 
@@ -719,6 +747,25 @@ header.top { display: flex; justify-content: space-between; align-items: baselin
       <p class="note">Mode économe : pensées moins fréquentes, réflexions espacées, pas de relecture quotidienne.</p>
     </details>
 
+    <details class="ctl" id="scEditor">
+      <summary>Scénarios</summary>
+      <p class="note">Des événements qui se déclenchent seuls. Chacun passe par une cause dans leur monde : rien n'arrive « tout seul ».</p>
+      <div class="ctl-row"><input type="text" id="scName" placeholder="Nom du scénario" maxlength="40"><button class="btn small" id="scNew" type="button">Nouveau scénario</button></div>
+      <div id="scList"></div>
+      <span class="label">Ajouter une étape</span>
+      <label class="ctl-inline"><span>Au scénario</span><select id="scTarget"></select></label>
+      <label class="ctl-inline"><span>Déclencheur</span><select id="scTrig"></select></label>
+      <div class="ctl-inline" id="scMomentRow"><span>Jour</span><input type="number" id="scDay" min="1" max="60" value="1"><span>à</span><input type="number" id="scHour" min="0" max="23" value="8"><span>h</span></div>
+      <div class="ctl-inline" id="scAfterRow" hidden><span>Minutes après</span><input type="number" id="scAfter" min="0" max="2880" value="60"></div>
+      <div class="ctl-inline" id="scCondRow" hidden><span>Condition</span><select id="scCond"></select></div>
+      <label class="ctl-inline"><span>Action</span><select id="scAct"></select></label>
+      <div id="scTextRow"><textarea id="scText" rows="2" placeholder="Le texte (lettre, journal, radio)"></textarea></div>
+      <div class="ctl-inline" id="scItemRow" hidden><span>Objet</span><select id="scItem"></select></div>
+      <p class="note" id="scCause"></p>
+      <div class="ctl-row"><button class="btn small" id="scAdd" type="button">Ajouter l'étape</button><button class="btn small ghost" id="scExport" type="button">Exporter les scénarios</button></div>
+      <p class="note" id="scNote"></p>
+    </details>
+
     <details class="ctl">
       <summary>Sauvegarde et données</summary>
       <div class="ctl-row">
@@ -742,6 +789,7 @@ header.top { display: flex; justify-content: space-between; align-items: baselin
   </div>
 
   <div class="pane" id="pane-journal" role="tabpanel" aria-labelledby="tab-journal" hidden>
+    <section class="temp summary" id="dailySummary" hidden></section>
     <div class="jfilters">
       <label><span>Qui</span><select id="jWho"></select></label>
       <label><span>Type</span><select id="jKind"></select></label>
@@ -814,6 +862,9 @@ header.top { display: flex; justify-content: space-between; align-items: baselin
       <select id="aiProvider"></select>
       <div id="aiFields" class="ai-fields"></div>
       <button class="btn" id="aiConnect" type="button">Connecter</button>
+      <label class="label" for="aiFrame">Cadre de fiction en tête de leurs prompts</label>
+      <select id="aiFrame"><option value="auto">Automatique (seulement pour Claude, qui en a besoin)</option><option value="on">Toujours</option><option value="off">Jamais</option></select>
+      <p class="note" id="aiFrameNote">Sans ce cadre, rien ne dit au modèle qu'il s'agit d'une fiction : il reçoit seulement le vécu du personnage. Claude refuse alors d'incarner une personne ; d'autres modèles jouent leur rôle sans difficulté.</p>
       <p class="note" id="aiStatus" aria-live="polite"></p>
       <p class="note" id="aiNote"></p>
     </section>
@@ -821,6 +872,12 @@ header.top { display: flex; justify-content: space-between; align-items: baselin
       <div class="temp-top"><span class="label">Cohérence de leur expérience</span><b id="auditVal">—</b></div>
       <p class="note" id="auditNote">Chaque récit et chaque pensée est relu : sorties de rôle (ils parlent d'IA) et soupçons (« un jeu », « on nous observe »…).</p>
       <ul class="journal" id="auditList"></ul>
+    </section>
+    <section class="temp" aria-label="Diagnostic">
+      <span class="label">Diagnostic de l'illusion</span>
+      <p class="note">Relit leurs prompts réels à la recherche d'indices (mots techniques, prénoms qu'ils ne devraient pas connaître, titres, valeurs cassées) et vérifie la cohérence du monde et la sauvegarde.</p>
+      <button class="btn small" id="diagRun" type="button">Lancer le diagnostic</button>
+      <ul class="diag" id="diagList"></ul>
       <button class="btn" id="criticBtn" type="button">Faire relire leur prompt par l'IA</button>
       <p class="note" id="criticOut" aria-live="polite"></p>
     </section>
@@ -861,7 +918,7 @@ function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Ma
    ===================================================================== */
 
 // Version du jeu : à changer ici ET dans le <title> et le <h1> d'index.html à chaque mise à jour
-const GAME_VERSION = "0.86";
+const GAME_VERSION = "0.92";
 
 const CONFIG = {
   // --- Temps ---
@@ -1069,7 +1126,7 @@ const CONFIG = {
 
   // --- Divers ---
   bubbleMs: 4500,             // durée d'affichage d'une phrase dite
-  hearDistance: 150,          // distance à laquelle on entend quelqu'un parler (dehors)
+  hearDistance: 340,          // distance à laquelle on entend une voix normale (environ 19 m) ; crier porte deux fois plus loin
   wakeDistance: 70,           // parler aussi près de quelqu'un qui dort le réveille
   panicDistance: 44,          // distance à la rivière qui déclenche la panique (peur des rivières)
   panicEnergyLoss: 15,        // énergie perdue à chaque crise de panique
@@ -1295,6 +1352,7 @@ const de_ = x => /^le /.test(x) ? "du " + x.slice(3) : "de " + x;
 
 const AI_DEFAULTS = {
   provider: "auto",
+  frame: "auto",                 // cadre de fiction en tête des prompts : auto (oui pour Claude), on, off
   openai:     { base: "https://api.openai.com/v1", key: "", quick: "gpt-4o-mini", default: "gpt-4o-mini", complex: "gpt-4o" },
   openrouter: { base: "https://openrouter.ai/api/v1", key: "", quick: "openrouter/auto", default: "openrouter/auto", complex: "openrouter/auto" },
   anthropic:  { key: "", quick: "claude-haiku-4-5-20251001", default: "claude-sonnet-5-5", complex: "claude-opus-5-5" },
@@ -1565,7 +1623,7 @@ function sees(a, b) {
 function hears(a, b) {
   const sameSpace = placeKey(a.x, a.y) === placeKey(b.x, b.y);
   const v = b._voice || 1;                                   // crier porte loin, chuchoter ne s'entend que de près
-  return dist(a, b) < (sameSpace ? CONFIG.hearDistance : 60) * v;
+  return dist(a, b) < (sameSpace ? CONFIG.hearDistance : 130) * v;      // à travers un mur, on entend jusqu'à 7 m environ
 }
 
 /* ---------- Soleil et température ---------- */
@@ -1713,6 +1771,11 @@ function tick(dt) {
   tickNews();
   tickInnerLife();
   tickNature(gm);
+  if (typeof tickEncounters === "function") tickEncounters(gm);
+  if (typeof tickConsolidation === "function") tickConsolidation();
+  if (typeof tickTraces === "function") tickTraces(gm);
+  if (typeof tickScenarios === "function") tickScenarios();
+  if (typeof tickSummary === "function") tickSummary();
   if (typeof tickPuppet === "function") tickPuppet(dt);
   tickHouse(gm);
   tickWaste(gm);
@@ -1966,6 +2029,8 @@ const OUTSIDE = [
   { what: "la lisière de la forêt, au nord", big: true, pts: seg([-EDGE, -EDGE], [RIVER_X, -EDGE], 10) },
   { what: "la lisière de la forêt, au sud", big: true, pts: seg([-EDGE, W + EDGE], [RIVER_X, W + EDGE], 10) },
   { what: "les arbres de l'autre rive, au-delà de la rivière", big: true, pts: seg([W + 140, -EDGE], [W + 140, W + EDGE], 12) },
+  { what: "de l'autre côté de la rivière, des prés clôturés de fils électriques", big: true, pts: seg([W + 120, 0], [W + 120, W], 6) },
+  { what: "des rangées de barbelés entre les champs du nord-ouest", big: true, pts: [[-300, -320], [-140, -380], [-420, -240]] },
   { what: "l'autre rive de la rivière, sablonneuse", big: true, pts: seg([W + 97, -M], [W + 97, W + M], 16) },
   { what: "la rivière qui continue vers le nord, hors du jardin", big: true, pts: [[RIVER_X + 50, -40], [RIVER_X + 50, -200]] },
   { what: "la rivière qui continue vers le sud, hors du jardin", big: true, pts: [[RIVER_X + 50, W + 40], [RIVER_X + 50, W + 200]] },
@@ -1999,7 +2064,7 @@ function firstPersonView(c) {
   discover(c);
   const seen = visibleThings(c), behind = seen.behind || [];
   const pz = typeof puppetSeen === "function" ? puppetSeen(c) : null;
-  const things = seen.concat(c.sleeping ? [] : looseView(c), wasteView(c), pz ? [pz] : []).sort((a, b) => a[0] - b[0]);
+  const things = seen.concat(c.sleeping ? [] : looseView(c), wasteView(c), pz ? [pz] : [], typeof tracesView === "function" ? tracesView(c) : []).sort((a, b) => a[0] - b[0]);
   const dark = !inHut(c.x, c.y) && sunInfo(S.t).alt < .1;
   const head = c.sleeping ? "Tu as les yeux fermés." : `Tu regardes vers ${FACE_CARDINAL[c.face || "down"]}.${dark ? " Il fait sombre : tu ne distingues que ce qui est proche ou éclairé." : ""}`;
   if (c.sleeping) return head + " " + touchFeelings(c);
@@ -2177,7 +2242,8 @@ function pushJournal(e) {
   S.journal.unshift(e);
   if (typeof learnFrom === "function") learnFrom(e);
   if (e.w >= 9 && typeof strongEvent === "function") strongEvent(e);
-  if (typeof lenaSense === "function") lenaSense(e);                 // Léna perçoit le monde en direct
+  if (typeof lenaSense === "function") lenaSense(e);
+  if (typeof autoCamEvent === "function") autoCamEvent(e);                 // Léna perçoit le monde en direct
   S.journal = S.journal.slice(0, CONFIG.memory.journalSize);
   if (e.w >= CONFIG.memory.anchorAt && e.kind !== "pensee") {
     S.mem = S.mem || {};
@@ -2520,7 +2586,7 @@ const ACTIONS = {
     prompt: () => `{"type":"dire","texte":"...","ton":"normal" ou "crier" ou "chuchoter"} : dire quelque chose à voix haute (crier porte loin, chuchoter ne s'entend que tout près), ce que tu veux ; les personnes proches l'entendent. Tu peux aussi mentir : ajoute alors "mensonge":true et "verite":"ce qui est vrai en réalité" (l'autre ne le saura pas, sauf s'il le découvre un jour)`,
     async run(c, a) {
       const t = String(a.texte || "").slice(0, 400), ton = norm(a.ton || "");
-      c._voice = /cri|hurl/.test(ton) ? 2.2 : /chuchot|murmur/.test(ton) ? .25 : 1;   // crier porte loin, chuchoter ne s'entend que de près
+      c._voice = /cri|hurl/.test(ton) ? 2.2 : /chuchot|murmur/.test(ton) ? .15 : 1;   // crier porte loin, chuchoter ne s'entend que de près
       c.doing = /cri|hurl/.test(ton) ? "Crie" : /chuchot|murmur/.test(ton) ? "Chuchote" : "Parle";
       if (t) {
         rt(c).bubble = { text: t, until: performance.now() + CONFIG.bubbleMs + t.length * 45 };
@@ -2532,11 +2598,12 @@ const ACTIONS = {
         pushJournal({ t: S.t, text: `${who(c)}${c._voice > 1.5 ? " crie" : c._voice < .5 ? " chuchote" : ""} : « ${t} »`, ai: true, by: c.id, aud: [c.id, ...heard.filter(o => !o.sleeping).map(o => o.id)] });
         // ceux qui entendent retiennent la phrase et peuvent répondre tout de suite
         for (const o of heard) if (!o.sleeping && !o.dead) {
-          o.heard = (o.heard || []).concat({ t: S.t, from: c.id, text: t, far: dist(o, c) > 100 || inHut(o.x, o.y) !== inHut(c.x, c.y) }).slice(-8);
+          o.heard = (o.heard || []).concat({ t: S.t, from: c.id, text: t, tone: c._voice > 1.5 ? "crier" : c._voice < .5 ? "chuchoter" : "", wall: placeKey(o.x, o.y) !== placeKey(c.x, c.y) || roomOf(o.x, o.y) !== roomOf(c.x, c.y), far: dist(o, c) > CONFIG.hearDistance * .7 * (c._voice || 1) }).slice(-8);
           rt(o).abortPlan = true; interrupt(o); wordsBond(c, o, t); wakeThought(o);
         }
         npcIgnore(c, t);
         if (typeof puppetHeard === "function") puppetHeard(c, t);
+        if (typeof npcAnswerNear === "function") npcAnswerNear(c, t);
         if (lie) recordLie(c, heard.filter(o => !o.sleeping && !o.dead), t, a.verite);
         // si on dit son prénom, l'autre l'apprend
         for (const o of heard) if (c.name && norm(t).includes(norm(c.name))) o.knows[c.id] = true;
@@ -4233,6 +4300,7 @@ function tickVillage(gm) {
   const V = village();
   if (S.villageFrozen) return;                 // l'observateur a figé le village
   for (const n of V.npcs) {
+    if (n.pauseUntil && S.t < n.pauseUntil) continue;          // il s'est arrêté pour parler à quelqu'un
     const v = vOf(n.id), k = currentAct(v), [, doing, where] = actOf(v, k);
     if (k !== n.act) {                                   // nouvelle activité : on y va
       n.act = k; n.doing = doing; n.sitting = false; n.wait = 0;
@@ -4497,6 +4565,7 @@ function modernSounds(c) {
   if (V.car?.moving && !inside) s.push("le bruit d'une voiture sur la route du village, au loin");
   if (tractorOn() && !inside) s.push("le ronronnement lointain d'un tracteur, du côté des champs");
   if (V.plane && rainNow() < .5) s.push("le grondement sourd d'un avion, très haut");
+  if (c.outside && HOUSES.ferme && Math.hypot(c.x - HOUSES.ferme.door[0], c.y - HOUSES.ferme.door[1]) < 320 && stableRand("chienferme", 20) < .35) s.push("un chien de ferme qui aboie, du côté de la ferme");
   if (!inside && h >= 7 && h < 21 && stableRand("route" + c.id, 90) < .25) s.push("au loin, le souffle continu d'une route");
   return s;
 }
@@ -4803,6 +4872,77 @@ function drawLooseOne(l) {
 </script>
 <script>
 /* =====================================================================
+   interpreter-local.js — LE TRADUCTEUR DE SECOURS
+   Le récit du personnage est traduit en actions par une seconde IA. Avec un
+   petit modèle, cette traduction échoue souvent (JSON illisible, actions
+   inconnues, paroles oubliées) : le personnage tourne en rond, ne mange pas,
+   et ce qu'il « dit » dans son récit n'est jamais prononcé, donc jamais
+   entendu par l'autre. Ce module :
+   - fait toujours prononcer les paroles entre guillemets du récit ;
+   - écarte les actions inconnues, et corrige les noms approchants ;
+   - si la traduction échoue, lit le récit lui-même (mots-clés : manger,
+     boire, dormir, aller vers…) pour en tirer des actions sensées ;
+   - compte tout cela (onglet IA), pour voir si le modèle suit.
+   ===================================================================== */
+
+const ACTION_ALIASES = { parler: "dire", repondre: "dire", crier: "dire", chuchoter: "dire", marcher: "aller", se_deplacer: "aller", deplacer: "aller", aller_vers: "aller", manger_fruit: "manger", cueillir_fruit: "cueillir", boire_eau: "boire", se_coucher: "dormir", sommeil: "dormir", se_reposer_un_peu: "se_reposer", observer: "regarder", examiner: "regarder", attendre: "se_reposer", toilette: "se_laver", laver: "se_laver" };
+function fixActions(acts) {
+  const out = [];
+  for (const a of acts || []) {
+    if (!a || typeof a !== "object") continue;
+    let t = norm(String(a.type || a.action || ""));
+    if (!ACTIONS[t]) t = ACTION_ALIASES[t] || Object.keys(ACTIONS).find(k => k.startsWith(t) || t.startsWith(k)) || "";
+    if (!ACTIONS[t]) continue;
+    out.push({ ...a, type: t });
+  }
+  return out;
+}
+// Les paroles du récit : tout ce qui est entre « » (ou entre guillemets droits)
+function speechOf(story) {
+  const out = [], re = /«\s*([^»]{2,300}?)\s*»|"([^"]{2,300}?)"/g; let m;
+  while ((m = re.exec(story)) && out.length < 2) { const t = (m[1] || m[2] || "").trim(); if (t && !/^(je|j')\s/i.test(t) || t.length > 1) out.push(t); }
+  return out;
+}
+const toneOf = story => /\b(chuchot|murmur|à voix basse|tout bas)/i.test(story) ? "chuchoter" : /\b(cri|hurl|appel|à pleine voix)/i.test(story) ? "crier" : "normal";
+// Lire le récit soi-même, quand la traduction échoue
+function localInterpret(c, story) {
+  const s = plainText(story), acts = [];
+  for (const t of speechOf(story)) acts.push({ type: "dire", texte: t, ton: toneOf(story) });
+  const want = re => re.test(s);
+  const places = [["arbre", /arbre/], ["riviere", /rivière|riviere|l'eau/], ["cabane", /maison|cabane/], ["rocher", /rocher/], ["fleurs", /fleurs|massif/], ["cabanon", /cabanon/], ["portail", /portail/], ["boite_aux_lettres", /boîte aux lettres|boite aux lettres|courrier/], ["autre_personne", /\b(vers (lui|elle)|la rejoindre|le rejoindre|m'approche)/], ["jeune_femme", /jeune femme|léna|lena/]];
+  if (want(/\b(je (vais|marche|me dirige|retourne|file|cours)|aller|m'approcher|rejoindre)/)) { const p = places.find(([, re]) => re.test(s)); if (p && POI[p[0]]) acts.push({ type: "aller", cible: p[0] }); }
+  if (want(/\b(je (vais |veux |dois )?(manger|croquer|goûter)|mange[rz]?|faim|un fruit)/) ) {
+    if (c.hand.length) acts.push({ type: "manger" });
+    else if (S.treeFruits > 0) acts.push({ type: "cueillir" }, { type: "manger" });
+    else if (S.ground.length) acts.push({ type: "ramasser" }, { type: "manger" });
+    else if ((c.pocket && Object.values(c.pocket).some(n => n > 0)) || Object.values(S.bag.items || {}).some(n => n > 0)) acts.push({ type: "consommer", objet: S.bag.items?.pain ? "pain" : "biscuits" });
+  }
+  if (want(/\b(boire|soif|gorgée|j'ai la gorge)/)) acts.push(c.known?.robinet || c.toldRobinet ? { type: "boire_robinet" } : { type: "boire" });
+  if (want(/\b(dormir|m'allonger|me coucher|sommeil|fermer les yeux|me reposer)/)) acts.push(/reposer/.test(s) ? { type: "se_reposer", minutes: 30 } : { type: "dormir", minutes: 180, lieu: inHut(c.x, c.y) ? "lit" : "ici" });
+  if (want(/\b(me laver|une douche|me doucher)/)) acts.push(house().water ? { type: "se_doucher" } : { type: "se_laver", avec: "riviere" });
+  if (want(/\b(fouille|ouvre le sac|le sac)/)) acts.push({ type: "fouiller_sac" });
+  if (want(/\b(lettre|courrier|boîte aux lettres|boite aux lettres|le journal|drapeau)/) && want(/\b(lire|lis|relever|ouvrir|ouvre|regarder|voir|prendre|chercher)/)) acts.push({ type: "relever_courrier" });
+  if (!acts.length || acts.every(a => a.type === "dire")) acts.push(acts.length ? { type: "se_reposer", minutes: 5 } : { type: "regarder", autour: true });
+  return acts.slice(0, CONFIG.maxActionsPerDecision);
+}
+const plainText = t => String(t || "").toLowerCase().normalize("NFC");
+// Ce qui sort de la traduction, réparé : paroles garanties, actions valides, secours si vide
+function repairPlan(c, story, res) {
+  const st = (S.interp = S.interp || { ok: 0, repaired: 0, local: 0, speech: 0 });
+  let acts = fixActions(Array.isArray(res?.actions) ? res.actions : []);
+  const raw = Array.isArray(res?.actions) ? res.actions.length : 0;
+  if (!acts.length) { st.local++; acts = localInterpret(c, story || ""); }
+  else { if (acts.length < raw) st.repaired++; else st.ok++; }
+  // toute parole du récit est prononcée, même si la traduction l'a oubliée
+  const said = speechOf(story || ""), has = acts.some(a => a.type === "dire");
+  if (said.length && !has) { st.speech++; acts.unshift(...said.map(t => ({ type: "dire", texte: t, ton: toneOf(story) }))); }
+  return acts.slice(0, CONFIG.maxActionsPerDecision + 1);
+}
+function interpText() { const s = S.interp; if (!s) return ""; const n = s.ok + s.repaired + s.local; return n ? `Traduction des décisions : ${s.ok} réussies, ${s.repaired} réparées, ${s.local} faites par le traducteur de secours ; ${s.speech} paroles rattrapées.` : ""; }
+
+</script>
+<script>
+/* =====================================================================
    ai.js — LES CERVEAUX : un prompt et une boucle de décisions par personnage.
    Les identités sont dans config.js (CHARACTERS), les textes communs dans TEXT,
    les actions dans actions.js.
@@ -4852,7 +4992,7 @@ function describeHearing(c) {
   if (!recent.length) return "";
   return "Ce qu'on t'a dit récemment :\n" + recent.map(h => {
     const o = S.chars.find(x => x.id === h.from) || (h.from === "pantin" ? S.puppet : null);
-    return `- ${agoWords(h.t)}, ${o ? nameFor(c, o) : h.who ? h.who + ", de l'autre côté de la clôture" : "quelqu'un"}${o && !o.dead ? " (" + relDir(c, o.x, o.y) + ")" : h.x != null ? " (" + relDir(c, h.x, h.y) + ")" : ""}${h.far ? ", d'une voix lointaine ou étouffée" : ""} : « ${h.text} »`;
+    return `- ${agoWords(h.t)}, ${o ? nameFor(c, o) : h.who ? h.who + (String(h.from || "").startsWith("npc:") && c.outside ? "" : ", de l'autre côté de la clôture") : "quelqu'un"}${h.wall ? " (de l'autre côté du mur)" : o && !o.dead ? " (" + relDir(c, o.x, o.y) + ")" : h.x != null ? " (" + relDir(c, h.x, h.y) + ")" : ""}${h.tone === "crier" ? ", en criant" : h.tone === "chuchoter" ? ", en chuchotant" : ""}${h.far && !h.wall ? ", d'une voix lointaine" : ""} : « ${h.text} »`;
   }).join("\n");
 }
 
@@ -4910,6 +5050,7 @@ ${knownText(c)}
 ${innerLifeText(c)}
 ${innerThread(c)}
 ${lastStory}
+${typeof historyText === "function" ? historyText(c) : ""}
 ${mergedMemories(c)}`.replace(/\n{3,}/g, "\n\n");
   return vary(capitalizeLines(text), c);
 }
@@ -4920,8 +5061,10 @@ function mergedMemories(c) {
   const seen = new Set(), list = [];
   for (const e of all) { const k = e.t + "|" + e.text; if (!seen.has(k)) { seen.add(k); list.push(e); } }
   list.sort((a, b) => a.t - b.t);
-  if (!list.length) return "Tu viens d'ouvrir les yeux, sans savoir où tu es.";
-  return "Ce qui s'est passé, du plus ancien au plus récent :\n" + dedupeLines(list.map(e => [agoWords(e.t), personalize(e.text, c)])).join("\n");
+  // une fois la journée passée consolidée en souvenirs, on ne garde le détail que depuis
+  if (c.consolidatedAt) { const kept = list.filter(e => e.t >= c.consolidatedAt - 60 || (e.w ?? 0) >= 9); list.length = 0; list.push(...kept); }
+  if (!list.length) return c.history?.length ? "Ce qui s'est passé depuis ton réveil : rien de marquant pour l'instant." : "Tu viens d'ouvrir les yeux, sans savoir où tu es.";
+  return (c.history?.length ? "Depuis ton dernier réveil :\n" : "Ce qui s'est passé, du plus ancien au plus récent :\n") + dedupeLines(list.map(e => [agoWords(e.t), personalize(e.text, c)])).join("\n");
 }
 
 // Le personnage est-il « sorti » de son rôle ? (parle d'IA, de modèle, de jeu, refuse…)
@@ -4945,7 +5088,16 @@ const isMeta = t => { const s = String(t || ""); return META_RE.test(s) || META_
    « I need to clarify my role »). C'est voulu de sa part, et on ne peut pas le contourner. On lui dit
    donc, honnêtement et en une ligne, qu'il écrit la voix intérieure d'un personnage ; tout le reste du
    prompt n'est que le vécu du personnage, sans aucune consigne. */
+// Le cadre de fiction en tête des prompts. Claude refuse d'incarner une personne sans lui ; d'autres modèles
+// jouent leur rôle sans qu'on le leur dise. Réglage dans l'onglet IA : automatique, toujours, jamais.
+const tidyPrompt = t => String(t).replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+function frameOn() {
+  const mode = AI.settings?.frame || "auto";
+  if (mode === "on") return true; if (mode === "off") return false;
+  return ["claude", "anthropic"].includes(AI.provider);
+}
 function frameLine(c) {
+  if (!frameOn()) return "";
   return `Fiction interactive en français. Tu écris, au présent et à la première personne, la voix intérieure de ${c.name || DEF(c.id).label.toLowerCase()}, personnage de ce récit : uniquement ses mots à lui${DEF(c.id).sex === "f" ? " — à elle" : ""}, depuis l'intérieur de sa tête.`.replace(" à lui — à elle", " à elle");
 }
 
@@ -4962,7 +5114,8 @@ function voiceText(c) {
   if (own.length >= 2) return `${base} Ces derniers temps, tu as dit par exemple : ${own.map(x => "« " + x + " »").join(" ; ")}.`;
   return v;
 }
-function buildPrompt(c) {
+function buildPrompt(...args) { return tidyPrompt(buildPromptRaw(...args)); }
+function buildPromptRaw(c) {
   const d = DEF(c.id);
   const identity = c.trait ? `De tempérament, tu es plutôt ${c.trait}.` : "";
   return `${frameLine(c)}
@@ -4975,7 +5128,7 @@ ${identity}
 ${c.relations && !/^(rien|aucune?|personne|vide|-)\.?$/i.test(c.relations.trim()) ? "Ce que tu pensais des autres, la dernière fois : " + c.relations + "\n\n" : ""}${describe(c)}
 
 ${focusNudge(c)}
-Et là, maintenant, en toi : ce que tu remarques, ce que tu ressens, ce qui te traverse l'esprit, et ce que tu fais (ce que tu dis à voix haute, entre « »). Quelques phrases, au présent, à la première personne :`.replace(/\n{3,}/g, "\n\n");
+${frameOn() ? "Et là, maintenant, en toi : ce que tu remarques, ce que tu ressens, ce qui te traverse l'esprit, et ce que tu fais (ce que tu dis à voix haute, entre « »). Quelques phrases, au présent, à la première personne :" : "Et là, maintenant, en toi ? Ce que tu remarques, ce que tu ressens, ce qui te traverse l'esprit, ce que tu fais — et ce que tu dis à voix haute, entre « »."}`.replace(/\n{3,}/g, "\n\n");
 }
 
 // Le traducteur : récit intérieur → commandes du moteur (ce texte n'est jamais montré au personnage)
@@ -5019,11 +5172,12 @@ async function decide(c) {
       return instinctPlan(c);
     }
     c.lastStory = story.slice(0, 600); c.lastStoryT = S.t; c.stories = (c.stories || []).concat(story.slice(0, 500)).slice(-8);
-    res = await sample.json(interpretPrompt(c, story), { modelTier: "quick", cache: false, signal: ctl.signal, priority: "decision" });
+    try { res = await sample.json(interpretPrompt(c, story), { modelTier: "quick", cache: false, signal: ctl.signal, priority: "decision" }); }
+    catch (e) { if (e && e.code === "cancelled") throw e; res = null; }       // traduction illisible : le traducteur de secours prendra le relais
   }
   catch (e) { if (e && e.code === "cancelled") throw { code: "too_long" }; throw e; }
   finally { clearTimeout(timer); rt(c).thinkingSince = null; }
-  if (!res || typeof res !== "object") throw { code: "invalid_json" };
+  if (!res || typeof res !== "object") res = {};
   if (c.metaSlip) c.metaSlip = Math.max(0, c.metaSlip - 1);
   if (!c.trait) { c.trait = String(res.caractere || "simple").slice(0, 80); log(`${who(c)} se réveille.`, c, true, true); }
   for (const k of ["observation", "relations", "pensee"]) if (isMeta(res[k])) res[k] = null;
@@ -5035,7 +5189,7 @@ async function decide(c) {
     c.inner = (c.inner || []).concat({ t: S.t, text: c.thought, dream: false }).slice(-8);
     rt(c).lastThoughtAt = performance.now();
   }
-  const acts = Array.isArray(res.actions) ? res.actions.filter(a => a && a.type).slice(0, CONFIG.maxActionsPerDecision) : [];
+  const acts = typeof repairPlan === "function" ? repairPlan(c, story, res) : (Array.isArray(res.actions) ? res.actions.filter(a => a && a.type).slice(0, CONFIG.maxActionsPerDecision) : []);
   return acts.length ? acts : instinctPlan(c);
 }
 
@@ -5160,7 +5314,8 @@ async function life(c) {
 const sleepReal = ms => new Promise(r => setTimeout(r, ms));
 let continuousOn = true;
 
-function thoughtPrompt(c) {
+function thoughtPrompt(...args) { return tidyPrompt(thoughtPromptRaw(...args)); }
+function thoughtPromptRaw(c) {
   const d = DEF(c.id), o = otherOf(c);
   const view = firstPersonView(c).split("\n").slice(0, 6).join("\n");
   const heard = (c.heard || []).filter(h => S.t - h.t < 30).map(h => `« ${h.text} »`).join(" ");
@@ -5172,17 +5327,18 @@ Un fragment de ton rêve, tel qu'il te vient, en une seule phrase courte (15 mot
   return `${frameLine(c)}
 ${d.identity}
 ${voiceText(c)}
-${c.trait ? "On te dirait plutôt " + c.trait + "." : ""}
+${c.trait ? "De tempérament, tu es plutôt " + c.trait + "." : ""}
 En ce moment, tu ${c.doing && c.doing !== "…" ? conjugate2(c.doing.charAt(0).toLowerCase() + c.doing.slice(1)).replace(/^tu /i, "") : "restes là"}.
-${timeWords()}
+${timeWords(c)}
 ${bodyFeelings(c) ? "Ton corps : " + bodyFeelings(c) : ""}
 Tes émotions : ${emotionFeelings(c) || "rien de particulier"}
 ${view}
 ${natureSounds(c)}
 ${heard ? "On vient de te dire : " + heard : ""}
 ${c.relations ? "Ce que tu penses des autres : " + c.relations : ""}
+${typeof lastLetterText === "function" ? lastLetterText(c) : ""}
 ${last ? "Ce qui te trottait dans la tête juste avant :\n" + last : ""}
-La pensée qui te traverse l'esprit à cet instant, telle quelle, en une seule phrase courte et naturelle (15 mots au plus), à la première personne :`;
+${frameOn() ? "La pensée qui te traverse l'esprit à cet instant, telle quelle, en une seule phrase courte et naturelle (15 mots au plus), à la première personne :" : "Ce qui te traverse l'esprit, là, tout de suite ? Une phrase, comme elle vient."}`;
 }
 
 async function thinkOnce(c, retry = false) {
@@ -5491,6 +5647,9 @@ function renderSky() {
 const VOICE_SETTINGS = {
   lui:  { pitch: 0.85, rate: 1.0, prefer: ["thomas", "daniel", "henri", "paul", "nicolas", "male", "homme"] },
   elle: { pitch: 1.25, rate: 1.03, prefer: ["amelie", "amélie", "audrey", "marie", "julie", "aurelie", "female", "femme", "google français"] },
+  pantin: { pitch: 1.1, rate: 0.98, prefer: ["audrey", "marie", "amelie", "amélie", "female", "femme"] },
+  npc_m: { pitch: 0.75, rate: 0.95, prefer: ["thomas", "daniel", "male"] },
+  npc_f: { pitch: 1.05, rate: 0.95, prefer: ["marie", "audrey", "female"] },
   thought: { volume: 0.75, rateFactor: 0.9 },   // les pensées : un peu plus bas et plus lent
   maxQueue: 4,                                  // au-delà, les pensées en attente sont sautées
 };
@@ -5509,7 +5668,7 @@ const Voice = (() => {
     const byName = voices.find(v => pref.some(p => v.name.toLowerCase().includes(p)));
     if (byName) return byName;
     // à défaut : deux voix françaises différentes si possible
-    return voices[id === "elle" && voices.length > 1 ? 1 : 0];
+    return voices[(id === "elle" || id === "pantin" || id === "npc_f") && voices.length > 1 ? 1 : 0];
   }
 
   function show(text) { if (!cap) return; cap.textContent = text; cap.hidden = !text; }
@@ -5673,6 +5832,9 @@ const ITEMS = {
   soins:     { label: "trousse de soins",  art: "une",  keep: false, desc: "une trousse de premiers secours (pansements, désinfectant)", use: c => { for (const i of c.injuries || []) i.pain -= 30; c.health = clamp((c.health ?? 100) + 15, 0, 100); return "se soigne avec la trousse de premiers secours"; } },
   savon:     { label: "savon",             art: "un",   keep: false, desc: "un savon parfumé", use: c => { c.hygiene = clamp(c.hygiene + 45, 0, 100); return "se lave soigneusement avec le savon parfumé"; } },
   livre:     { label: "livre",             art: "un",   keep: true,  desc: "un roman d'aventure un peu usé", use: c => { moved(c, -15); feel(c, "joy", 12); c.energy = clamp(c.energy + 3, 0, 100); return "lit quelques pages du roman, absorbé"; } },
+  carte_postale: { label: "carte postale de Saint-Aubin-du-Val", art: "une", keep: true, desc: "une carte postale du village", use: c => { feel(c, "joy", 3); return "regarde la carte postale : l'église de Saint-Aubin-du-Val sous le soleil, et au dos, quelques mots de Léna"; } },
+  coupure:   { label: "coupure du journal local", art: "une", keep: true, desc: "une coupure de L'Écho du Val", use: c => "relit la coupure de L'Écho du Val : les résultats du club de foot, le prix de la baguette, le marché du jeudi" },
+  confiture: { label: "pot de confiture de Josiane", art: "un", keep: false, desc: "un pot de confiture maison", use: c => { c.food = clamp(c.food + 30, 0, 100); feel(c, "joy", 8); return "ouvre le pot de confiture de prunes : l'étiquette, écrite à la main, dit « Josiane, septembre ». C'est délicieux"; } },
   lampe:     { label: "lampe de poche",    art: "une",  keep: true,  desc: "une lampe de poche", use: c => { const H = house(); if (H.torch <= 0) return "appuie sur le bouton de la lampe de poche : rien, les piles sont mortes"; c.torchOn = !c.torchOn; return c.torchOn ? "allume la lampe de poche" : "éteint la lampe de poche"; } },
   allumettes:{ label: "boîte d'allumettes", art: "une",  keep: true,  desc: "une boîte d'allumettes", use: c => { if (matchesLeft() <= 0) return "ouvre la boîte d'allumettes : elle est vide"; useMatches(1); feel(c, "joy", 3); return `craque une allumette et regarde la petite flamme danser avant qu'elle s'éteigne (${matchesLeft() ? matchesWord() : "c'était la dernière"})`; } },
   ballon:    { label: "ballon",            art: "un",   keep: true,  desc: "un ballon de foot", use: c => { moved(c, -10); feel(c, "joy", 15); feel(c, "fear", -10); c.energy = clamp(c.energy - 6, 0, 100); return "joue un moment avec le ballon"; } },
@@ -5792,6 +5954,9 @@ function drawItem(type, x, y, rot = 0) {
     case "livre": R(8, 10, "#2f5d8a", 1); ctx.fillStyle = "#f4efe2"; ctx.fillRect(2.4, -4.6, 1.2, 9.2); ctx.fillStyle = "#e3b64c"; ctx.fillRect(-2.6, -2, 4, 1); break;
     case "ballon": ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(0, 0, 4.5, 0, 7); ctx.fill(); ctx.strokeStyle = "#8a8a8a"; ctx.lineWidth = .6; ctx.stroke(); ctx.fillStyle = "#222"; ctx.beginPath(); ctx.arc(0, 0, 1.6, 0, 7); ctx.fill(); for (let k = 0; k < 5; k++) { const a = k * 1.256; ctx.beginPath(); ctx.arc(Math.cos(a) * 3.6, Math.sin(a) * 3.6, .9, 0, 7); ctx.fill(); } break;
     case "pomme": drawFruit(0, 0, 4.2, "frais"); break;
+    case "carte_postale": R(9, 6, "#f4ecd8"); ctx.fillStyle = "#7aa6c8"; ctx.fillRect(-4, -2.5, 4, 4); break;
+    case "coupure": R(8, 6, "#efe8d6"); ctx.strokeStyle = "#777"; ctx.lineWidth = .4; for (let k = -2; k <= 2; k++) { ctx.beginPath(); ctx.moveTo(-3, k); ctx.lineTo(3, k); ctx.stroke(); } break;
+    case "confiture": R(6, 8, "#7b2d4a", 2); ctx.fillStyle = "#e8dcc0"; ctx.fillRect(-3, -4.5, 6, 2); break;
     case "lampe": R(10, 4, "#2d2d2d", 1.5); ctx.fillStyle = "#f1e3a0"; ctx.fillRect(4, -2, 1.6, 4); break;
     case "allumettes": R(9, 6, "#d9483b", 1); ctx.fillStyle = "#f3e2b0"; ctx.fillRect(-3.4, -1.6, 6.8, 3.2); ctx.fillStyle = "#7a2a20"; ctx.fillRect(2.4, -1.6, 1, 3.2); break;
   }
@@ -5883,10 +6048,12 @@ ACTIONS.relever_courrier = {
     for (const l of news) {
       await waitMin(c, clamp(Math.round(l.text.length / 60), 3, 25));         // le temps de lire
       l.readBy.push(c.id);
+      for (const o of S.chars) if (o !== c && o.name && l.text.includes(o.name)) c.knows[o.id] = true;
+      if (S.puppet?.name && l.text.includes(S.puppet.name)) c.knows.pantin = true;
       const dot = document.getElementById("mailDot"); if (dot && document.getElementById("pane-mail").hidden) dot.hidden = false;
       if (l.kind === "journal") { log(`${who(c)} trouve le journal du jour dans la boîte aux lettres.`, c); pushJournal({ t: S.t, text: `${who(c)} lit le journal : « ${l.text.slice(0, 700)} »`, ai: false, by: c.id, aud: [c.id], w: /disparu|recherche/i.test(l.text) ? 10 : 5 }); continue; }
       log(`${who(c)} lit une lettre trouvée dans la boîte aux lettres.`, c);
-      pushJournal({ t: S.t, text: `${who(c)} lit une lettre : « ${l.text} »`, ai: false, by: c.id, aud: [c.id] });
+      pushJournal({ t: S.t, text: `${who(c)} lit une lettre : « ${l.text} »`, ai: false, by: c.id, aud: [c.id], w: 8 });
     }
     renderJournal(); renderMail();
   }
@@ -5950,6 +6117,14 @@ function renderMail() {
     setTimeout(() => { st.textContent = ""; }, 4000);
   };
 })();
+
+// Pour leurs pensées : la lettre lue récemment leur trotte dans la tête
+function lastLetterText(c) {
+  const l = (S.letters || []).filter(x => x.kind !== "journal" && x.readBy.includes(c.id)).slice(-1)[0];
+  const readAt = (S.journal.find(e => e.by === c.id && /lit une lettre/.test(e.text) && e.text.includes(l?.text?.slice(0, 30) || "§")) || {}).t;
+  if (!l || readAt == null || S.t - readAt > 720) return "";
+  return `La lettre que tu as lue ${agoWords(readAt)} : « ${smartCut(l.text, 400)} »`;
+}
 
 </script>
 <script>
@@ -6103,6 +6278,7 @@ function newsFacts(d) {
   if (y === "jeudi") f.push("Jeudi, le marché s'est tenu sur la place : légumes de Marcel Duret, pain de Lucas.");
   if (y === "dimanche") f.push("Dimanche, la messe a réuni les habitants du village, suivie de la traditionnelle partie de boules sur la place.");
   if (today === "jeudi") f.push("Aujourd'hui jeudi, jour de marché sur la place, de 7 h à midi.");
+  if (typeof encounterNewsFact === "function") { const ef = encounterNewsFact(d); if (ef) f.push(ef); }
   if (today === "samedi") f.push("Rappel : messe demain dimanche à 10 h en l'église du village.");
   if (d === 6) f.push("Avis de décès : Robert Lefèvre, ancien forgeron du village, s'est éteint à 88 ans. Le glas a sonné hier matin ; les obsèques auront lieu en l'église.");
   if (d >= 4 && (today === "jeudi" || today === "vendredi")) f.push("Samedi après-midi, mariage de Sophie Morel et Julien Arnaud en l'église du village. Tous nos vœux de bonheur.");
@@ -6256,15 +6432,8 @@ async function reflect(c) {
   R.reflecting = true; c.reflectDue = false; c.lastReflect = S.t;
   const d = DEF(c.id);
   try {
-    const r = await sample(`${frameLine(c)}
-${d.identity}
-${d.voice || ""}
-${c.trait ? "On te dirait plutôt " + c.trait + "." : ""}
-${(c.beliefs || []).length ? "Ce que tu pensais jusqu'ici :\n" + c.beliefs.map(b => "- " + b).join("\n") : ""}
-Ce que tu as vécu ces derniers temps :
-${lifeSummary(c)}
-En repensant à tout ça, au calme : qu'est-ce que tu as fini par penser, au fond, de ta situation, des autres et de toi ? Deux ou trois convictions, une par ligne, chacune commençant par « Je » :`, { modelTier: "quick", priority: "physics" });
-    const lines = cleanModelText(r?.text).split("\n").map(l => l.replace(/^[-•*\d.\s"«]+|["»\s]+$/g, "").trim()).filter(l => /^(je|j')/i.test(l) && l.length > 8 && !isMeta(l)).slice(0, 3);
+    const r = await sample(reflectPrompt(c), { modelTier: "quick", priority: "physics" });
+    const lines = cleanModelText(r?.text).split("\n").map(l => l.replace(/^[-•*\d.\s"«]+|["»\s]+$/g, "").trim()).filter(l => (/^(je|j')/i.test(l) || !frameOn()) && l.length > 8 && !isMeta(l)).slice(0, 3);
     for (const l of lines) auditText(c, l, "réflexion");
     if (lines.length) c.beliefs = lines.map(l => smartCut(l, 240));
   } catch {}
@@ -6275,15 +6444,7 @@ async function planDay(c) {
   R.planning = true; c.planDue = false;
   const d = DEF(c.id);
   try {
-    const r = await sample(`${frameLine(c)}
-${d.identity}
-${d.voice || ""}
-${(c.beliefs || []).length ? "Ce que tu penses, au fond :\n" + c.beliefs.map(b => "- " + b).join("\n") : ""}
-${knownText(c)}
-${bodyFeelings(c) ? "Ce que ton corps ressent : " + bodyFeelings(c) : ""}
-Ce que tu as vécu ces derniers temps :
-${lifeSummary(c, 15)}
-${timeWords(c)} Qu'aimerais-tu faire ${(S.t % 1440) / 60 < 12 ? "de ta journée" : (S.t % 1440) / 60 < 17 ? "du reste de la journée" : "de ta soirée"}, à partir de maintenant ? Deux ou trois intentions simples, en une ou deux phrases, à la première personne :`, { modelTier: "quick", priority: "physics" });
+    const r = await sample(planPrompt(c), { modelTier: "quick", priority: "physics" });
     const t = smartCut(cleanModelText(r?.text).split("\n").join(" "), 280);
     auditText(c, t, "plan");
     if (t.length > 10 && !isMeta(t)) c.dayPlan = { day: day(S.t), t: S.t, text: t };
@@ -6361,6 +6522,33 @@ Derniers récits :
 ${(c.stories || []).slice(-5).map(s => "- " + s).join("\n")}`, { modelTier: "default", priority: "physics" })
     .then(r => { (S.bench = S.bench || []).push({ day: d, who: who(c), indices: (r?.indices || []).slice(0, 5), voix: Number(r?.voix) || null, commentaire: String(r?.commentaire || "").slice(0, 200), slips: S.audit?.slips || 0, doubts: S.audit?.doubts || 0 }); S.bench = S.bench.slice(-10); renderAudit(); })
     .catch(() => {}).finally(() => { S.benchBusy = false; });
+}
+
+// Les prompts, lisibles par le diagnostic
+function reflectPrompt(...args) { return tidyPrompt(reflectPromptRaw(...args)); }
+function reflectPromptRaw(c) {
+  const d = DEF(c.id);
+  return `${frameLine(c)}
+${d.identity}
+${voiceText(c)}
+${c.trait ? "De tempérament, tu es plutôt " + c.trait + "." : ""}
+${(c.beliefs || []).length ? "Ce que tu pensais jusqu'ici :\n" + c.beliefs.map(b => "- " + b).join("\n") : ""}
+Ce que tu as vécu ces derniers temps :
+${lifeSummary(c)}
+En repensant à tout ça, au calme : qu'est-ce que tu as fini par penser, au fond, de ta situation, des autres et de toi ? ${frameOn() ? "Deux ou trois convictions, une par ligne, chacune commençant par « Je » :" : "Deux ou trois choses que tu penses vraiment, une par ligne."}`;
+}
+function planPrompt(...args) { return tidyPrompt(planPromptRaw(...args)); }
+function planPromptRaw(c) {
+  const d = DEF(c.id);
+  return `${frameLine(c)}
+${d.identity}
+${voiceText(c)}
+${(c.beliefs || []).length ? "Ce que tu penses, au fond :\n" + c.beliefs.map(b => "- " + b).join("\n") : ""}
+${knownText(c)}
+${bodyFeelings(c) ? "Ce que ton corps ressent : " + bodyFeelings(c) : ""}
+Ce que tu as vécu ces derniers temps :
+${lifeSummary(c, 15)}
+${timeWords(c)} Qu'aimerais-tu faire ${(S.t % 1440) / 60 < 12 ? "de ta journée" : (S.t % 1440) / 60 < 17 ? "du reste de la journée" : "de ta soirée"}, à partir de maintenant ? ${frameOn() ? "Deux ou trois intentions simples, en une ou deux phrases, à la première personne :" : "Deux ou trois choses, simplement."}`;
 }
 
 </script>
@@ -7364,6 +7552,236 @@ function gateChanged(from, to) {
 </script>
 <script>
 /* =====================================================================
+   encounters.js — LES VILLAGEOIS LES VOIENT (étape 2)
+   Dehors, un villageois qui croise Théo ou Clémence les remarque : il
+   s'arrête, s'étonne, salue ; la nuit il s'inquiète ; si le personnage est
+   blessé ou affamé, il propose de l'aide ; s'il a lu l'avis de recherche, il
+   reconnaît le visage et propose de l'emmener au village. Le suivre mène au
+   village (la sortie de l'histoire) ; refuser le fait insister, puis il
+   prévient le village, et le journal du lendemain en parle.
+   Chaque habitant garde la même version des faits d'une fois sur l'autre.
+   ===================================================================== */
+
+const NPC_TALES = {
+  marcel: "Ce jardin ? Il est fermé depuis des années. Je ne sais pas à qui il est, et je ne pose pas de questions.",
+  josiane: "Ah, ce jardin… Je n'y ai jamais mis les pieds. Il y a quelqu'un qui passe s'en occuper, de temps en temps.",
+  lucas: "Je ne sais pas grand-chose, moi. Je fais du pain, je vois des gens le matin, c'est tout.",
+  ines: "Mes moutons passent souvent le long de cette clôture. Je n'ai jamais vu personne entrer.",
+  antoine: "Il y a longtemps, il y avait une famille, là-dedans… Je ne me souviens plus bien. C'était il y a si longtemps.",
+};
+const encDist = (c, n) => perceivedDist(c, n.x, n.y) / CONFIG.sight.pxPerMeter;
+function encLabel(c, n) { const v = vOf(n.id); return c.npcNames?.[n.id] ? v.name : v.desc.split(",")[0]; }
+// Ce que dit un villageois, tel que l'entend le personnage
+function npcSpeaksTo(c, n, text, w = 7) {
+  npcSay(n, text);
+  if (typeof Voice !== "undefined") Voice.say({ id: "npc_" + vOf(n.id).sex, name: vOf(n.id).name }, text, "dire");
+  const label = encLabel(c, n);
+  c.heard = (c.heard || []).concat({ t: S.t, from: "npc:" + n.id, who: label, x: n.x, y: n.y, text }).slice(-8);
+  pushJournal({ t: S.t, text: `${label.charAt(0).toUpperCase() + label.slice(1)} : « ${text} »`, ai: false, by: null, aud: [c.id], w, kind: "dire" });
+  rt(c).abortPlan = true; interrupt(c); if (typeof wakeThought === "function") wakeThought(c);
+}
+function tickEncounters(gm) {
+  const V = S.village; if (!V) return;
+  const h = (S.t % 1440) / 60, night = sunInfo(S.t).alt < .05;
+  for (const c of S.chars) {
+    if (!c.outside || c.dead || c.gone || c.sleeping) continue;
+    for (const n of V.npcs) {
+      if (n.inside) continue;
+      const d = encDist(c, n); if (d > 25) continue;
+      const nf = n.face === -1 ? "left" : n.face === 1 ? "right" : FACE_VEC[n.face] ? n.face : "down";
+      if (!seenFrom({ ...c, x: n.x, y: n.y, face: nf, sleeping: false }, c.x, c.y, Math.hypot(c.x - n.x, c.y - n.y)) && d > 8) continue;
+      const E = (S.encounters = S.encounters || {}), k = c.id + ":" + n.id, e = E[k] = E[k] || { met: 0, last: -9999 };
+      if (S.t - e.last < 180) { tickOffer(c, n, e); continue; }
+      e.last = S.t; e.met++;
+      n.walking = false; n.pauseUntil = S.t + 20; n.face = c.x > n.x ? 1 : -1;
+      const v = vOf(n.id), hurt = painOf(c) > 35, hungry = c.food < 30, known = typeof missingOn === "function" && missingOn() && day(S.t) > CONFIG.news.missingFromDay;
+      let line;
+      if (known) { line = `Mais… attends. C'est toi, sur l'avis de recherche du journal ! Tout le monde te cherche. Viens avec moi, je t'emmène au village, on va prévenir les gendarmes.`; e.offer = S.t; c.villageOffer = { npc: n.id, t: S.t }; }
+      else if (night) line = e.met > 1 ? "Encore toi, dehors à cette heure ? Rentre te mettre au chaud." : "Qu'est-ce que tu fais dehors à cette heure-ci ? Tu es perdu" + fe(c) + " ?";
+      else if (hurt || hungry) { line = hurt ? "Tu es blessé" + fe(c) + " ? Viens, au village on va te soigner." : "Tu as une mine affreuse… Tu as mangé quelque chose ? Viens au village."; e.offer = S.t; c.villageOffer = { npc: n.id, t: S.t }; }
+      else line = e.met > 1 ? "Ah, re-bonjour." : `Bonjour… Tu n'es pas d'ici, toi. Tu cherches quelque chose ?`;
+      npcSpeaksTo(c, n, line, known ? 9 : 7);
+      if (!c.npcSeen?.[n.id]) { c.npcSeen = c.npcSeen || {}; c.npcSeen[n.id] = true; log(`${who(c)} croise ${v.desc.split(",")[0]}, qui s'arrête pour ${pron(c) === "Elle" ? "la" : "le"} regarder.`, c, false, false, 7); }
+    }
+  }
+}
+// Une proposition restée sans suite : il insiste, puis prévient le village
+function tickOffer(c, n, e) {
+  if (!e.offer || c.gone) return;
+  if (S.t - e.offer > 30 && !e.insisted) { e.insisted = true; npcSpeaksTo(c, n, "Tu es sûr" + fe(c) + " ? Le village est juste là. Il y a des gens qui peuvent t'aider."); }
+  else if (S.t - e.offer > 60 && !e.warned) { e.warned = true; npcSpeaksTo(c, n, "Bon… comme tu veux. Mais je vais prévenir quelqu'un."); S.villageAlert = { by: n.id, who: c.id, day: day(S.t) }; c.villageOffer = null; }
+}
+// Ce que le traducteur peut proposer : le suivre au village
+ACTIONS.suivre_villageois = {
+  prompt: c => c && c.villageOffer && S.t - c.villageOffer.t < 120 ? `{"type":"suivre_villageois"} : accepter l'aide du villageois et le suivre jusqu'au village` : null,
+  async run(c) {
+    const n = npcById(c.villageOffer?.npc); c.villageOffer = null;
+    if (!n) { log(`${who(c)} cherche des yeux le villageois : il est déjà reparti.`, c); return; }
+    npcSpeaksTo(c, n, "Allez, viens. Ce n'est pas loin.");
+    c.doing = "Suit " + encLabel(c, n) + " vers le village";
+    n.walking = true; n.pauseUntil = S.t + 240;
+    await goTo(c, LAND.square.x, LAND.square.y);
+  }
+};
+// Quand on leur parle : chacun sa version, toujours la même
+function npcAnswerNear(c, text) {
+  const V = S.village; if (!V || !c.outside) return;
+  const t = String(text).toLowerCase();
+  const n = V.npcs.filter(x => !x.inside && encDist(c, x) < 12).sort((a, b) => encDist(c, a) - encDist(c, b))[0]; if (!n) return;
+  const E = (S.encounters = S.encounters || {}), e = E[c.id + ":" + n.id] = E[c.id + ":" + n.id] || { met: 1, last: S.t };
+  if (S.t - (e.lastAnswer ?? -99) < 5) return; e.lastAnswer = S.t;
+  const v = vOf(n.id);
+  let line;
+  if (/(comment (tu t'appelles|vous vous appelez)|ton nom|votre nom|t'es qui|vous êtes qui)/.test(t)) { line = `Moi ? ${v.name}. ${{ marcel: "Je suis fermier, là-bas.", josiane: "La femme de Marcel.", lucas: "Le boulanger.", ines: "Je garde les moutons.", antoine: "Le plus vieux du village, à ce qu'on dit." }[n.id] || ""}`; (c.npcNames = c.npcNames || {})[n.id] = true; }
+  else if (/(jardin|clôture|cloture|enferm|portail|à qui)/.test(t)) line = NPC_TALES[n.id];
+  else if (/(aide|aidez|police|gendarme|téléphone|telephone|village|perdu)/.test(t)) { line = "Le village est juste au bout de la route. Viens, je t'y emmène."; e.offer = S.t; c.villageOffer = { npc: n.id, t: S.t }; }
+  else if (/(où|ou sommes|on est où)/.test(t)) line = "À Saint-Aubin-du-Val. Enfin, juste à côté.";
+  else line = ["Hm ?", "Pardon, je n'ai pas bien compris.", "Tu as l'air fatigué" + fe(c) + ", toi."][Math.floor(Math.random() * 3)];
+  setTimeout(() => npcSpeaksTo(c, n, line), 1200);
+}
+// Le lendemain, le journal en parle
+function encounterNewsFact(d) {
+  const A = S.villageAlert; if (!A || A.day !== d - 1) return null;
+  const c = S.chars.find(x => x.id === A.who), v = vOf(A.by);
+  return `${v.name} dit avoir croisé hier, près du chemin qui longe l'ancien jardin, ${DEF(A.who).sex === "f" ? "une jeune femme hagarde" : "un jeune homme hagard"}, qui a refusé toute aide. Les gendarmes ont été prévenus.`;
+}
+
+</script>
+<script>
+/* =====================================================================
+   consolidation.js — LA MÉMOIRE SE CONSOLIDE LA NUIT (étape 5)
+   Au premier sommeil profond de chaque nuit, la journée vécue se condense
+   en quelques souvenirs durables, à la première personne, comme le fait le
+   sommeil humain. Ils forment leur histoire, jour après jour : le prompt
+   présente cette histoire, puis le détail du jour en cours seulement.
+   Rien n'est inventé : le résumé ne s'appuie que sur leur propre journal.
+   ===================================================================== */
+
+const dayStart = d => (d - 1) * 1440;
+// La journée à résumer : de la dernière consolidation jusqu'à maintenant
+function dayToConsolidate(c) {
+  const from = c.consolidatedAt ?? 0;
+  return S.journal.filter(e => e.aud && e.aud.includes(c.id) && e.t >= from && e.t < S.t && e.kind !== "echec").slice().reverse();
+}
+async function consolidate(c) {
+  const R = rt(c); if (R.consolidating || !sampleReady || !sample) return;
+  const events = dayToConsolidate(c); if (events.length < 4) { c.consolidatedAt = S.t; return; }
+  R.consolidating = true;
+  const d = DEF(c.id), label = day(c.consolidatedAt ?? 0) === day(S.t) ? "aujourd'hui" : `le jour ${c.history?.length ? c.history.length + 1 : 1}`;
+  try {
+    const r = await sample(consolidationPrompt(c, events, label), { modelTier: "quick", priority: "physics" });
+    const lines = cleanModelText(r?.text).split("\n").map(l => l.replace(/^[-•*\d.\s"«]+|["»\s]+$/g, "").trim()).filter(l => l.length > 12 && !isMeta(l)).slice(0, 5).map(l => smartCut(l, 220));
+    for (const l of lines) auditText(c, l, "souvenir");
+    if (lines.length) { c.history = (c.history || []).concat({ day: day(S.t - 360), lines }); c.consolidatedAt = S.t; }
+  } catch {}
+  R.consolidating = false;
+}
+// Déclencheur : endormi depuis au moins une heure, la nuit, et pas encore consolidé depuis 12 h
+function tickConsolidation() {
+  if (!running || !sampleReady) return;
+  const h = (S.t % 1440) / 60;
+  for (const c of S.chars) {
+    if (c.dead || c.gone || !c.sleeping || c.collapsed) { c.sleptSince = c.sleeping ? (c.sleptSince ?? S.t) : null; continue; }
+    c.sleptSince = c.sleptSince ?? S.t;
+    if ((h >= 21 || h < 7) && S.t - c.sleptSince > 60 && S.t - (c.consolidatedAt ?? -9999) > 720) consolidate(c);
+  }
+}
+// Pour le prompt : leur histoire, jour après jour
+function historyText(c) {
+  if (!(c.history || []).length) return "";
+  return "Ton histoire depuis ton arrivée ici, telle que tu t'en souviens :\n" + c.history.slice(-7).map((h, i, a) => `- ${a.length - i === 1 ? "Hier" : a.length - i === 2 ? "Avant-hier" : `Il y a ${a.length - i} jours`} : ${h.lines.join(" ")}`).join("\n");
+}
+
+function consolidationPrompt(...args) { return tidyPrompt(consolidationPromptRaw(...args)); }
+function consolidationPromptRaw(c, events = dayToConsolidate(c), label = "aujourd'hui") {
+  const d = DEF(c.id);
+  return `${frameLine(c)}
+${d.identity}
+${(c.history || []).length ? "Ce que tu as déjà vécu ici, jour après jour :\n" + c.history.map((h, i) => `Jour ${i + 1} : ${h.lines.join(" ")}`).join("\n") + "\n" : ""}
+Ce que tu as vécu ${label}, dans l'ordre :
+${events.slice(-70).map(e => "- " + personalize(e.text, c)).join("\n")}
+Tu t'endors. De cette journée, que vas-tu garder en mémoire ? ${frameOn() ? "Trois à cinq souvenirs, les plus marquants, une phrase chacun, à la première personne et au passé, sans rien inventer. Un souvenir par ligne :" : "Les trois à cinq souvenirs qui te resteront, un par ligne."}`;
+}
+
+</script>
+<script>
+/* =====================================================================
+   traces.js — DES TRACES DANS LE MONDE (étape 6)
+   Écrire un mot (au charbon de la cheminée, sur un bout de papier) et le
+   laisser quelque part ; graver un signe sur l'arbre, le rocher ou un poteau.
+   Chaque trace reste à sa place, visible quand on passe devant, lisible de
+   près par l'autre et par Léna. Un mot laissé dehors se délave sous la pluie ;
+   une gravure reste. Le monde se souvient d'eux.
+   ===================================================================== */
+
+const TRACE_SPOTS = {
+  table: { at: () => HOUSE.table, where: "sur la table du salon" },
+  lit: { at: () => [BED[0] + 6, BED[1] + 4], where: "sur le lit" },
+  porte: { at: () => DOOR_OUT, where: "glissé contre la porte de la maison" },
+  boite: { at: () => [MAILBOX.x + 8, MAILBOX.y + 6], where: "coincé sous la boîte aux lettres" },
+  arbre: { at: () => [TREE.x + 8, TREE.y + 56], where: "au pied de l'arbre, sous une pierre" },
+  rocher: { at: () => [POI.rocher()[0], POI.rocher()[1]], where: "sur le rocher, sous un caillou" },
+  cabanon: { at: () => SHED.bed, where: "sur le lit de camp du cabanon" },
+};
+const CARVE_SPOTS = { arbre: { at: () => [TREE.x, TREE.y + 50], where: "dans l'écorce de l'arbre" }, rocher: { at: () => POI.rocher(), where: "sur le rocher" }, poteau: { at: () => [36, 120], where: "sur un poteau de la clôture" } };
+const spotOf = (table, k) => { const n = norm(k || ""); return Object.keys(table).find(x => n.includes(x)) || null; };
+
+ACTIONS.ecrire_mot = {
+  prompt: () => `{"type":"ecrire_mot","texte":"...","lieu":"table" ou "lit" ou "porte" ou "boite" ou "arbre" ou "rocher" ou "cabanon"} : écrire quelques mots au charbon sur un bout de papier et les laisser à cet endroit`,
+  async run(c, a) {
+    const text = String(a.texte || "").trim().slice(0, 240); if (!text) return;
+    const k = spotOf(TRACE_SPOTS, a.lieu) || (inHut(c.x, c.y) ? "table" : "arbre"), sp = TRACE_SPOTS[k];
+    c.doing = "Écrit un mot";
+    if (!inHut(c.x, c.y)) await goTo(c, HEARTH.x + 14, HEARTH.y + 16);                  // un bout de charbon dans la cheminée
+    await waitMin(c, 6);
+    const paper = (S.letters || []).length ? "une page déchirée du journal" : "un morceau de carton";
+    await goTo(c, ...sp.at()); await waitMin(c, 2);
+    S.traces = (S.traces || []).concat({ kind: "mot", text, k, x: sp.at()[0], y: sp.at()[1], by: c.id, t: S.t, paper, wash: 0 }).slice(-30);
+    log(`${who(c)} écrit au charbon, sur ${paper} : « ${text} », et le laisse ${sp.where}.`, c, false, false, 7);
+  }
+};
+ACTIONS.graver_signe = {
+  prompt: () => `{"type":"graver_signe","signe":"...","lieu":"arbre" ou "rocher" ou "poteau"} : graver un signe ou quelques lettres avec une pierre pointue`,
+  async run(c, a) {
+    const sign = String(a.signe || "une croix").trim().slice(0, 60);
+    const k = spotOf(CARVE_SPOTS, a.lieu) || "arbre", sp = CARVE_SPOTS[k];
+    c.doing = "Grave un signe"; await goTo(c, ...sp.at()); await waitMin(c, 20); c.energy = clamp(c.energy - 4, 0, 100);
+    S.traces = (S.traces || []).concat({ kind: "gravure", text: sign, k, x: sp.at()[0], y: sp.at()[1], by: c.id, t: S.t }).slice(-30);
+    log(`${who(c)} grave ${sp.where} : « ${sign} ».`, c, false, false, 6);
+  }
+};
+// Un mot laissé dehors se délave sous la pluie
+function tickTraces(gm) {
+  if (rainNow() < .3) return;
+  for (const t of S.traces || []) if (t.kind === "mot" && !indoors(t.x, t.y)) t.wash = (t.wash || 0) + gm * rainNow();
+}
+// Ce qu'on voit des traces (et ce qu'on lit de près)
+function tracesView(c) {
+  if (c.sleeping) return [];
+  const out = [];
+  for (const t of S.traces || []) {
+    if (placeKey(t.x, t.y) !== placeKey(c.x, c.y) || roomOf(t.x, t.y) !== roomOf(c.x, c.y)) continue;
+    const d = Math.hypot(t.x - c.x, t.y - c.y); if (d > sightRange() || !seenFrom(c, t.x, t.y, d)) continue;
+    const mine = t.by === c.id, ago = agoWords(t.t), near = d < 3 * CONFIG.sight.pxPerMeter;
+    // lire un mot signé, c'est apprendre un prénom
+    if (near && t.kind !== "x" && !(t.wash > 120)) { for (const o of S.chars) if (o !== c && o.name && t.text.includes(o.name)) c.knows[o.id] = true; if (S.puppet?.name && t.text.includes(S.puppet.name)) c.knows.pantin = true; }
+    const what = t.kind === "mot"
+      ? (t.wash > 120 ? `${t.paper}, délavé par la pluie : l'écriture est illisible` : near ? `${mine ? "le mot que tu as laissé" : "un mot écrit au charbon"} (${ago}) : « ${t.text} »` : `${mine ? "le mot que tu as laissé" : "un bout de papier griffonné"}`)
+      : (near ? `${mine ? "le signe que tu as gravé" : "un signe gravé"} (${ago}) : « ${t.text} »` : "des entailles gravées");
+    out.push([d, `${relDir(c, t.x, t.y)}, ${distWords(d)} : ${what}`]);
+  }
+  return out;
+}
+function drawTraces() {
+  for (const t of S.traces || []) {
+    if (t.kind === "mot") { ctx.fillStyle = t.wash > 120 ? "#cfc6b0" : "#f2ead6"; ctx.fillRect(t.x - 3, t.y - 2, 6, 4.5); ctx.strokeStyle = "#555"; ctx.lineWidth = .4; for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(t.x - 2, t.y - .8 + k * 1.2); ctx.lineTo(t.x + 2, t.y - .8 + k * 1.2); ctx.stroke(); } }
+    else { ctx.strokeStyle = "rgba(60,40,25,.8)"; ctx.lineWidth = .7; ctx.beginPath(); ctx.moveTo(t.x - 2, t.y - 2); ctx.lineTo(t.x + 2, t.y + 2); ctx.moveTo(t.x + 2, t.y - 2); ctx.lineTo(t.x - 2, t.y + 2); ctx.stroke(); }
+  }
+}
+
+</script>
+<script>
+/* =====================================================================
    outside.js — SORTIR DU JARDIN
    Quand le portail est ouvert, Théo et Clémence peuvent le franchir et
    marcher dans la campagne : le chemin qui longe la clôture, la route du
@@ -7403,7 +7821,9 @@ function clampOutside(x, y) {
 function crossesGarden(a, b) { for (let k = 1; k < 30; k++) { const x = lerp(a[0], b[0], k / 30), y = lerp(a[1], b[1], k / 30); if (x > -4 && x < W + 4 && y > -4 && y < W + 4) return true; } return false; }
 // Marcher dehors, en contournant le jardin par les coins du chemin
 async function walkOutside(c, x, y, f) {
+  const want = [x, y];
   [x, y] = clampOutside(x, y);
+  const limited = Math.hypot(want[0] - x, want[1] - y) > 40 && !inGardenArea(...want);
   const a = [c.x, c.y], C = RING_CORNERS;
   if (crossesGarden(a, [x, y])) {
     const routes = [[C.nw], [C.sw], [C.ne], [C.se], [C.nw, C.ne], [C.sw, C.se], [C.ne, C.nw], [C.se, C.sw]];
@@ -7413,6 +7833,27 @@ async function walkOutside(c, x, y, f) {
   }
   await step(c, x, y, f);
   c.outside = !inGardenArea(c.x, c.y);
+  if (limited && !c.dead && !c.gone) await naturalLimit(c, want);
+}
+/* ---------- Étape 3 : des limites naturelles, jamais de mur invisible ----------
+   Au-delà de la zone praticable, il y a toujours une raison physique : la forêt
+   (ronces, pentes, on se perd), la rivière (large, froide, rapide), les fermes
+   (barbelés, chiens). Chaque échec devient un souvenir vécu. */
+async function naturalLimit(c, want) {
+  const [x, y] = want;
+  if (x > RIVER_X - 20) { log(`${who(c)} arrive au bord de la rivière : large, froide, le courant rapide. De l'autre côté, des prés clôturés de fils électriques. Impossible de traverser ici.`, c, false, false, 7); knowFact(c, "riviere_dehors", "hors du jardin, la rivière est large et rapide ; l'autre rive est clôturée de fils électriques"); return; }
+  if (x < LAND.village.x1 + 10 && y > LAND.village.y0 - 60 && y < LAND.village.y1 + 60) return;     // le village : géré par la route
+  return forestWander(c);
+}
+async function forestWander(c) {
+  c.doing = "S'enfonce dans la forêt";
+  log(`${who(c)} quitte le sentier et s'enfonce sous les arbres : un sous-bois épais de ronces et de fougères, des pentes, plus aucun chemin.`, c, false, false, 7);
+  await waitMin(c, 50);
+  if (c.dead) return;
+  c.energy = clamp(c.energy - 15, 0, 100); c.hygiene = clamp(c.hygiene - 10, 0, 100);
+  c.injuries = (c.injuries || []).filter(i => i.id !== "ronces").concat({ id: "ronces", label: "des griffures de ronces sur les jambes et les bras", pain: 12, limp: 0, since: S.t });
+  log(`${who(c)} tourne longtemps entre les ronces, perd tout repère, puis finit par retrouver la lisière… presque au même endroit, griffé${fe(c)} et épuisé${fe(c)}.`, c, false, false, 8);
+  knowFact(c, "foret", "la forêt autour est un sous-bois épais de ronces et de pentes, sans sentier : on s'y perd et on ressort au même endroit");
 }
 // Sortir par le portail (s'il est ouvert)
 async function goOut(c) {
@@ -7428,6 +7869,8 @@ async function goToOutside(c, key) {
   if (key === "village") { await reachVillage(c); return true; }
   c.doing = "Marche " + (OUT_SPOT_WORDS[key] || "dans la campagne").replace(/^(sur|au|à|dans|près|devant)/, m => ({ sur: "sur", au: "vers", "à": "vers", dans: "dans", "près": "vers", devant: "vers" })[m] || m);
   await walkOutside(c, ...OUT_SPOTS[key]());
+  if (key === "foret" && !c.dead) await forestWander(c);
+  if (key === "champs" && !c.dead) { log(`${who(c)} longe les champs : des rangées de barbelés les séparent, et un chien de ferme se met à aboyer et à grogner au loin.`, c, false, false, 6); knowFact(c, "champs", "les champs sont clôturés de barbelés, et un chien de ferme monte la garde"); }
   if (key === "puits") knowFact(c, "puits_vu", "le vieux puits, de l'autre côté de la clôture, est à sec : une grille rouillée le ferme");
   return true;
 }
@@ -8033,6 +8476,7 @@ function draw(now) {
   drawLoose(now);
   drawNatureGround(now);
   drawWaste();
+  if (typeof drawTraces === "function") drawTraces();
   drawHouseOutside(now);
   drawShed(now);
   drawVillage(now);
@@ -8469,18 +8913,20 @@ function panBy(dx, dy) {
 /* ---------- Boutons ---------- */
 function renderCamButtons() {
   const box = document.getElementById("camPeople"); if (!box) return;
-  if (box.children.length !== S.chars.length + 3) {
+  if (box.children.length !== S.chars.length + 4) {
     box.textContent = "";
     const all = document.createElement("button"); all.type = "button"; all.dataset.id = ""; all.textContent = "Campagne"; box.appendChild(all);
     const gd = document.createElement("button"); gd.type = "button"; gd.dataset.id = GARDEN_VIEW; gd.textContent = "Jardin"; box.appendChild(gd);
     const vl = document.createElement("button"); vl.type = "button"; vl.dataset.id = "@village"; vl.textContent = "Village"; box.appendChild(vl);
     for (const c of S.chars) { const b = document.createElement("button"); b.type = "button"; b.dataset.id = c.id; box.appendChild(b); }
-    for (const b of box.children) b.onclick = () => setFollow(b.dataset.id || null);
+    for (const b of box.children) b.onclick = () => { if (typeof AUTOCAM !== "undefined") AUTOCAM.on = false; setFollow(b.dataset.id || null); };
+    const au = document.createElement("button"); au.type = "button"; au.dataset.id = "@auto"; au.textContent = "Auto"; au.title = "Caméra automatique : elle suit les moments importants";
+    au.onclick = () => { AUTOCAM.on = !AUTOCAM.on; if (AUTOCAM.on) setFollow(S.chars.find(c => !c.dead && !c.gone)?.id || null); renderCamButtons(); }; box.appendChild(au);
   }
   for (const b of box.children) {
     const c = S.chars.find(x => x.id === b.dataset.id);
     if (c) b.textContent = who(c);
-    b.setAttribute("aria-pressed", String(!CAM.free && (b.dataset.id || null) === CAM.follow));
+    b.setAttribute("aria-pressed", String(b.dataset.id === "@auto" ? (typeof AUTOCAM !== "undefined" && AUTOCAM.on) : !CAM.free && (b.dataset.id || null) === CAM.follow));
   }
   document.getElementById("zoomOut").disabled = CAM.tz <= CAM.min;
   document.getElementById("zoomIn").disabled = CAM.tz >= CAM.max;
@@ -8802,6 +9248,7 @@ function renderAudit() {
   const v = document.getElementById("auditVal"); if (!v) return;
   v.textContent = A.checked ? `${A.checked} relus · ${A.slips} sortie${A.slips > 1 ? "s" : ""} de rôle · ${A.doubts} soupçon${A.doubts > 1 ? "s" : ""}` : "rien encore";
   const ul = document.getElementById("auditList"); ul.textContent = "";
+  if (typeof interpText === "function" && interpText()) { const li = document.createElement("li"); const sp = document.createElement("span"); sp.textContent = interpText(); li.append(document.createElement("time"), sp); ul.appendChild(li); }
   for (const b of (S.bench || []).slice(-3).reverse()) {
     const li = document.createElement("li"); const tm = document.createElement("time"); tm.textContent = "j" + b.day;
     const sp = document.createElement("span"); sp.textContent = `Relecture du jour (${b.who}) : voix ${b.voix ?? "?"}/10. ${b.indices.length ? "Indices : " + b.indices.join(" ; ") : "Aucun indice relevé."}${b.commentaire ? " — " + b.commentaire : ""}`;
@@ -8968,6 +9415,7 @@ const INTEGRITY = [
   ["js/environment.js", () => typeof HEARTH],
   ["js/npc.js", () => typeof HOUSES],
   ["js/objects.js", () => typeof HEFT],
+  ["js/interpreter-local.js", () => typeof ACTION_ALIASES],
   ["js/ai.js", () => typeof fruitList],
   ["js/thoughts.js", () => typeof sleepReal],
   ["js/ui.js", () => typeof setStatus],
@@ -8985,6 +9433,9 @@ const INTEGRITY = [
   ["js/bodylife.js", () => typeof CRAVINGS],
   ["js/mindlife.js", () => typeof involuntaryMemory],
   ["js/house.js", () => typeof house],
+  ["js/encounters.js", () => typeof NPC_TALES],
+  ["js/consolidation.js", () => typeof dayStart],
+  ["js/traces.js", () => typeof TRACE_SPOTS],
   ["js/outside.js", () => typeof inGardenArea],
   ["js/control.js", () => typeof CTL],
   ["js/render-layers.js", () => typeof cv],
@@ -8995,7 +9446,9 @@ const INTEGRITY = [
   ["js/observer.js", () => typeof HIST_METRICS],
   ["js/save.js", () => typeof SAVE_KEY],
   ["js/puppet.js", () => typeof PUPPET_DEF],
-  ["js/lena-brain.js", () => typeof LENA_GOALS]
+  ["js/lena-brain.js", () => typeof LENA_GOALS],
+  ["js/scenarios.js", () => typeof SC_TRIGGERS],
+  ["js/diagnostic.js", () => typeof TELLS]
 ];
 function checkIntegrity() {
   const broken = INTEGRITY.filter(([, t]) => { try { return t() === "undefined"; } catch { return true; } }).map(([f]) => f);
@@ -9096,7 +9549,8 @@ function puppetGate(dir) {
 }
 function tickPuppet(dt) {
   // partie lancée « avec Léna » : elle arrive par la route un peu après le réveil
-  if (S.lenaArriveAt != null && S.t >= S.lenaArriveAt && running) { S.lenaArriveAt = null; puppetEnter(); }
+  if (S.lenaArriveAt != null && S.t >= S.lenaArriveAt && running) { S.lenaArriveAt = null; puppetEnter(); lenaArrives(); }
+  if (typeof tickLenaLife === "function") tickLenaLife(dt * CONFIG.minutesPerSecond * speed);
   tickPuppetMeet();
   if (typeof tickBrain === "function") tickBrain(); else tickLenaInfluence();     // le cerveau de Léna remplace les réflexes simples
   const p = S.puppet; if (!p || !p.present || !running) { if (p) rt(p).walk = null; return; }
@@ -9119,20 +9573,21 @@ function tickPuppet(dt) {
 function puppetSay(text, tone = "normal") {
   const p = puppet(); if (!p.present || !text.trim()) return;
   text = text.trim().slice(0, 300);
-  p._voice = tone === "crier" ? 2.2 : tone === "chuchoter" ? .25 : 1;
+  p._voice = tone === "crier" ? 2.2 : tone === "chuchoter" ? .15 : 1;
   rt(p).bubble = { text, until: performance.now() + 2600 + text.length * 45 };
   const reveals = new RegExp("\\b" + p.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(text);
   for (const c of S.chars) {
     if (c.dead || c.gone) continue;
-    if (!hears(c, p)) continue;
+    if (!hears(c, p)) { if (!c.sleeping && sees(c, p)) pushJournal({ t: S.t, text: `${capFirst(nameFor(c, p))} parle, mais trop loin pour que tu entendes ce qu'elle dit.`, ai: false, by: null, aud: [c.id], w: 2 }); continue; }
     if (reveals) c.knows.pantin = true;
     if (/robinet/i.test(text)) c.toldRobinet = true;              // ce qu'on leur a déjà dit, ils le savent
     const label = puppetLabel(c), verb = tone === "crier" ? "crie" : tone === "chuchoter" ? "chuchote" : "dit";
-    c.heard = (c.heard || []).concat({ t: S.t, from: "pantin", x: p.x, y: p.y, text }).slice(-8);
+    c.heard = (c.heard || []).concat({ t: S.t, from: "pantin", x: p.x, y: p.y, text, tone: tone === "normal" ? "" : tone, wall: placeKey(c.x, c.y) !== placeKey(p.x, p.y) || roomOf(c.x, c.y) !== roomOf(p.x, p.y), far: dist(c, p) > CONFIG.hearDistance * .7 * (p._voice || 1) }).slice(-8);
     pushJournal({ t: S.t, text: `${capFirst(label)} ${verb} : « ${text} »`, ai: false, by: null, aud: [c.id], w: 7, kind: "dire" });
     if (c.sleeping && tone !== "chuchoter" && dist(c, p) < 80) wake(c);
     rt(c).abortPlan = true; interrupt(c); if (typeof wakeThought === "function") wakeThought(c);
   }
+  if (typeof Voice !== "undefined") Voice.say(p, text, "dire");
   feedPuppet(`${p.name} : « ${text} »`, "elle");
   renderPuppetUI();
 }
@@ -9452,6 +9907,50 @@ function renderDossier() {
   renderDossier();
 })();
 
+/* =====================================================================
+   ÉTAPE 4 — LA VIE DE LÉNA HORS DU JARDIN
+   Elle arrive le matin par la route, repart au coucher du soleil, dort au
+   village ; le dimanche, elle ne vient pas. Elle revient avec un pain de
+   chez Lucas et des nouvelles vraies du village ; ses vêtements changent
+   d'un jour à l'autre, ses cheveux sont mouillés s'il pleuvait sur la route,
+   elle est fatiguée le soir. Une vraie personne, avec une vie ailleurs.
+   ===================================================================== */
+HERO_LOOKS.pantin2 = { ...HERO_LOOKS.pantin, jacket: "#4f6f9a", jacketShade: "#3c5679", jacketTrim: "#e9eef5", shorts: "#2f3e5a" };
+const LENA_OUTFITS = ["une robe vert sauge et un cardigan crème", "un jean et un gros pull bleu"];
+Object.defineProperty(PUPPET_DEF, "look", { get: () => (S.puppet?.outfit || 0) % 2 ? "pantin2" : "pantin" });
+Object.defineProperty(PUPPET_DEF, "appearance", { get: () => {
+  const p = S.puppet || {}, tired = (p.energy ?? 90) < 45;
+  return `une jeune femme d'environ vingt-cinq ans, d'une beauté saisissante : un visage aux traits parfaits, des yeux clairs, de longs cheveux blond doré${p.wetUntil > S.t ? ", encore mouillés par la pluie" : ""}, une silhouette élancée dans ${LENA_OUTFITS[(p.outfit || 0) % 2]}${tired ? " ; elle a l'air fatiguée" : " ; elle dégage une assurance tranquille qui attire le regard"}`;
+} });
+const lenaRoutineOn = () => (S.lena?.settings?.routine ?? true);
+function nextLenaVisit() {
+  let d = day(S.t) + 1;
+  if (WEEKDAYS[(d - 1) % 7] === "dimanche") d++;                       // le dimanche, elle reste chez elle
+  S.lenaArriveAt = (d - 1) * 1440 + 8 * 60 + Math.round(Math.random() * 120);
+}
+function lenaArrives() {
+  const p = puppet();
+  p.outfit = day(S.t) % 2; p.carry = "pain"; p.energy = 90; p.food = 85; p.hygiene = 95;
+  p.wetUntil = rainNow() > .3 ? S.t + 90 : 0; p.arrivedAt = S.t;
+  (S.lena ||= {}).newsToday = true;
+}
+function tickLenaLife(gm) {
+  const p = S.puppet; if (!p || !running) return;
+  if (p.present && !p.dead) {
+    p.energy = clamp((p.energy ?? 90) - gm * .04, 0, 100); p.food = clamp((p.food ?? 85) - gm * .05, 0, 100); p.hygiene = clamp((p.hygiene ?? 95) - gm * .015, 0, 100);
+    // elle repart au coucher du soleil (sauf moment intime en cours)
+    if (lenaRoutineOn() && !p.leaving && !S.intimacy?.ids?.includes("pantin") && (solarHour(S.t) >= 17.6 || S.t - (p.arrivedAt ?? S.t) > 600)) {
+      p.leaving = true; abortTactic?.("elle rentre chez elle");
+      const near = S.chars.filter(c => !c.dead && !c.gone && !c.sleeping && sees(c, p) && dist(c, p) < 100)[0];
+      if (near) { faceTowardsP(near.x, near.y); puppetSay(["Je dois rentrer, il va faire nuit. Je reviens demain.", "Il se fait tard. À demain.", "Je rentre au village. Prends soin de toi."][Math.floor(Math.random() * 3)]); }
+      puppetLeave();
+    }
+  }
+  if (p.leaving && p.present && !p.path.length) { p.present = false; p.leaving = false; feedPuppet(`${p.name} est rentrée au village.`, "info"); if (lenaRoutineOn()) nextLenaVisit(); }
+}
+// Ce qu'elle rapporte du village : un pain, et une nouvelle vraie
+// (l'action « apporter » est déclarée dans lena-brain.js, avec les autres)
+
 </script>
 <script>
 /* =====================================================================
@@ -9661,6 +10160,8 @@ function scoreAction(c, a) {
     case "rapprocher": fit = o && c.met[o.id] && !o.dead && affOf(c, o) < 40 ? 1 : 0; why.push("lien avec l'autre à renforcer"); break;
     case "eloigner": fit = o && c.met[o.id] && !o.dead && affOf(c, o) > -40 ? 1 : 0; why.push("lien avec l'autre à distendre"); break;
     case "distance": fit = (T.trust < 30 || c.fear >= 70) && d < 5 ? 1.3 : 0; why.push("se méfie ou a très peur, et tu es trop près"); break;
+    case "apporter": fit = p.carry && (c.food < 85 || S.lena?.newsToday) ? 1.3 : 0; why.push("tu as un pain de chez Lucas et des nouvelles du village"); break;
+    case "ancre_objet": { const k = lenaAnchorToday(); fit = k && T.trust >= 40 && !(c.items || []).includes(k) && !recentlyDid(c.id, "ancre_objet", 1200) ? 1.2 : 0; why.push("un souvenir concret du village"); } break;
     case "observer": fit = 1 + (lastTalk(c.id) < settings().talkGap ? 1.5 : 0); why.push(lastTalk(c.id) < 25 ? "laisser respirer après lui avoir parlé" : "rien de mieux à faire"); break;
   }
   if (!fit) return [0, ""];
@@ -9692,6 +10193,8 @@ function planFor(c, a) {
     case "rapprocher": goNear(); { const o = otherOf(c); say(o ? `Reste près ${DEF(o.id).sex === "f" ? "d'elle" : "de lui"}. À deux, on tient mieux, ici.` : "À deux, on tient mieux, ici."); } break;
     case "eloigner": goNear(); say("Fais attention… on ne connaît jamais vraiment les gens.", "chuchoter"); break;
     case "distance": st.push({ k: "go", to: [clamp(p.x + (p.x - c.x) * .6, 30, RIVER_X - 20), clamp(p.y + (p.y - c.y) * .6, 30, W - 30)] }); st.push({ k: "expr", e: "neutre" }); break;
+    case "apporter": goNear(); st.push({ k: "bread" }); { const facts = typeof newsFacts === "function" ? newsFacts(day(S.t)).filter(f => !/Avis de recherche/.test(f)) : []; say("Au village, ce matin : " + (facts.length ? facts[Math.floor(Math.random() * facts.length)].replace(/^./, m => m.toLowerCase()) : "rien de spécial, le marché, les cloches, les vieux sur le banc.")); } break;
+    case "ancre_objet": goNear(); st.push({ k: "anchor" }); break;
     case "observer": st.push({ k: "wait", min: 6 }); break;
   }
   return st;
@@ -9740,6 +10243,20 @@ function runTactic() {
     else if (S.ground.length) { const g = S.ground.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0]; S.ground = S.ground.filter(x => x !== g); p.hand.push(g.born); }
     else return abortTactic("plus aucun fruit");
   }
+  else if (s.k === "anchor") {
+    const k = p.anchor; if (!k || dist(c, p) > 40) return abortTactic("impossible d'offrir le souvenir");
+    p.anchor = null; c.items = (c.items || []).concat(k); bond(c, p, CONFIG.social.gift); feel(c, "joy", 8);
+    pushJournal({ t: S.t, text: `${capFirst(nameFor(c, p))} te tend ${itemLabel(k)}.`, ai: false, by: null, aud: [c.id], w: 8 });
+    faceTowardsP(c.x, c.y); puppetSay(ANCHOR_LINES[k]);
+    feedPuppet(`Tu offres ${itemLabel(k)} à ${who(c)}.`, "elle");
+  }
+  else if (s.k === "bread") {
+    if (!p.carry || dist(c, p) > 40) return abortTactic("impossible de donner le pain");
+    p.carry = null; if (S.lena) S.lena.newsToday = false;
+    c.pocket = c.pocket || {}; c.pocket.pain = (c.pocket.pain || 0) + 1; bond(c, p, CONFIG.social.gift); feel(c, "joy", 12);
+    pushJournal({ t: S.t, text: `${capFirst(nameFor(c, p))} te tend un pain encore tiède, enveloppé dans du papier : il vient de chez Lucas, le boulanger du village.`, ai: false, by: null, aud: [c.id], w: 8 });
+    feedPuppet(`Tu donnes un pain à ${who(c)}.`, "elle");
+  }
   else if (s.k === "give") {
     if (!p.hand.length || c.hand.length >= CONFIG.maxHolding || dist(c, p) > 40) return abortTactic("impossible de donner");
     const born = p.hand.shift(); c.hand.push(born); bond(c, p, CONFIG.social.gift); feel(c, "joy", 10); moved(c, -CONFIG.emotions.giftRelief);
@@ -9751,6 +10268,7 @@ function runTactic() {
 // la boucle : décider de temps en temps, exécuter en continu ; un événement marquant fait réagir aussitôt
 function tickBrain() {
   const p = S.puppet, L = lena(); if (!p || !p.present || p.dead || !p.auto || !running) return;
+  applyLenaPlan();
   runTactic();
   tickLearning();
   if (!L.tactic && S.t >= (L.convUntil ?? 0) && (S.t - (L.lastDecideAt ?? -999) > settings().interval || L.urgent)) { L.lastDecideAt = S.t; L.urgent = false; lenaDecide(); }
@@ -9906,6 +10424,7 @@ function tickLearning() {
   }
 }
 LENA_ACTIONS.converser = { label: "Converser", goals: {} };
+LENA_ACTIONS.apporter = { label: "Apporter du pain et des nouvelles", goals: { confiance: .85, ancrer: .75, apaiser: .4, rapprocher: .1, eloigner: .1 } };
 function renderLearning() {
   const box = document.getElementById("dkLearn"); if (!box) return;
   const L = lena();
@@ -9942,6 +10461,7 @@ const settings = () => { const L = lena(); L.settings = { interval: 12, talkGap:
   tg("dkTouch", () => puppet().acceptTouch !== false, v => puppet().acceptTouch = v, "Se laisse toucher : oui", "Se laisse toucher : non");
   tg("dkConverse", () => settings().converse, v => settings().converse = v, "Répond quand on lui parle : oui", "Répond quand on lui parle : non");
   tg("dkLearnOn", () => settings().learn, v => settings().learn = v, "Apprend de ses actions : oui", "Apprend de ses actions : non");
+  tg("dkRoutine", () => settings().routine !== false, v => settings().routine = v, "Routine (arrive le matin, repart le soir) : oui", "Routine (arrive le matin, repart le soir) : non");
   const fol = document.getElementById("dkFollow");
   for (const [v, l] of [["", "Ne suit personne"], ...CHARACTERS.map(c => [c.id, "Suit " + (c.name || c.label)])]) { const o = document.createElement("option"); o.value = v; o.textContent = l; fol.appendChild(o); }
   fol.value = p.follow || ""; fol.onchange = () => { puppet().follow = fol.value || null; };
@@ -9963,6 +10483,220 @@ const settings = () => { const L = lena(); L.settings = { interval: 12, talkGap:
   document.getElementById("dkAccept").onclick = () => puppetAnswer(true);
   document.getElementById("dkRefuse").onclick = () => puppetAnswer(false);
   setInterval(() => { const pend = document.getElementById("dkPending"), q = S.puppet; if (!pend) return; const c = q && S.chars.find(x => x.id === q.pendingFrom); const on = !!c && S.proposal?.to === "pantin"; pend.hidden = !on; if (on) document.getElementById("dkPendingText").textContent = `${who(c)} te propose un moment intime.`; }, 1000);
+})();
+
+/* ---------- Étape 8 : ancres matérielles et scénario sur plusieurs jours ---------- */
+LENA_ACTIONS.ancre_objet = { label: "Offrir un souvenir du village", goals: { ancrer: .9, confiance: .55, apaiser: .3 } };
+const ANCHOR_LINES = { carte_postale: "Tiens. C'est l'église du village. Garde-la, ça te fera un repère.", coupure: "Je t'ai découpé ça dans le journal. Comme ça, tu sauras ce qui se passe au village.", confiture: "C'est Josiane qui fait ça, avec les prunes de son jardin. Goûte." };
+function lenaAnchorToday() { const p = puppet(); if (p.anchorDay !== day(S.t)) { p.anchorDay = day(S.t); p.anchor = ["carte_postale", "coupure", "confiture"][day(S.t) % 3]; } return p.anchor; }
+// Le scénario de Léna : des objectifs datés, appliqués d'eux-mêmes
+function applyLenaPlan() {
+  const L = lena(); if (!(L.plan || []).length) return;
+  for (const c of S.chars) { const rows = L.plan.filter(r => r.cid === c.id && r.day <= day(S.t)).sort((a, b) => a.day - b.day); if (rows.length) L.goals[c.id] = rows[rows.length - 1].goal; }
+}
+(function lenaPlanPanel() {
+  const box = document.getElementById("dkPlan"); if (!box) return;
+  const who2 = document.getElementById("dkPlanWho"), goal = document.getElementById("dkPlanGoal");
+  for (const c of CHARACTERS) who2.add(new Option(c.name || c.label, c.id));
+  for (const [k, l] of Object.entries(LENA_GOALS)) goal.add(new Option(l, k));
+  const render = () => { const L = lena(); box.innerHTML = (L.plan || []).sort((a, b) => a.day - b.day).map((r, i) => `<li>Jour ${r.day} — ${esc(CHARACTERS.find(c => c.id === r.cid)?.name || r.cid)} : ${esc(LENA_GOALS[r.goal])} <button class="btn small ghost" data-i="${i}" type="button">Retirer</button></li>`).join("") || `<li class="note">Aucun objectif programmé : les objectifs des fiches s'appliquent.</li>`; };
+  document.getElementById("dkPlanAdd").onclick = () => { const L = lena(); (L.plan = L.plan || []).push({ day: Math.max(1, +document.getElementById("dkPlanDay").value || day(S.t)), cid: who2.value, goal: goal.value }); render(); };
+  box.onclick = e => { const b = e.target.closest("button"); if (!b) return; lena().plan.splice(+b.dataset.i, 1); render(); };
+  render();
+})();
+
+</script>
+<script>
+/* =====================================================================
+   scenarios.js — L'ÉDITEUR DE SCÉNARIOS (étape 7)
+   Des suites d'événements programmées : chaque étape attend son déclencheur
+   (un moment, un délai après l'étape précédente, ou une condition sur le
+   monde), puis agit. Chaque action passe obligatoirement par une cause dans
+   leur monde (le facteur, une panne sur la ligne, le temps qui tourne, une
+   silhouette au portail…) : rien n'arrive « tout seul ».
+   ===================================================================== */
+
+const SC_TRIGGERS = { moment: "À un moment précis", apres: "Après l'étape précédente", condition: "Quand une condition est remplie" };
+const SC_CONDS = {
+  faim_theo: ["Théo a très faim", () => (S.chars.find(c => c.id === "lui")?.food ?? 100) < 20],
+  faim_clemence: ["Clémence a très faim", () => (S.chars.find(c => c.id === "elle")?.food ?? 100) < 20],
+  silence: ["Ils ne se sont pas parlé depuis 12 h", () => !S.journal.some(e => e.kind === "dire" && S.chars.some(c => c.id === e.by) && S.t - e.t < 720) && S.t > 720],
+  nuit: ["Il fait nuit", () => sunInfo(S.t).alt < .05],
+  dehors: ["Quelqu'un est sorti du jardin", () => S.chars.some(c => c.outside)],
+  lena_confiance: ["Quelqu'un fait confiance à Léna", () => S.puppet && S.chars.some(c => c.met?.pantin && affOf(c, S.puppet) >= 40)],
+  dispute: ["Leur lien s'est dégradé", () => S.chars.some(c => { const o = otherOf(c); return o && affOf(c, o) <= -30; })],
+};
+// Chaque action et sa cause dans leur monde
+const SC_ACTIONS = {
+  lettre: ["Une lettre", "le facteur la glisse dans la boîte aux lettres", "texte", a => postLetter(a.text || "…")],
+  journal: ["Un journal personnalisé", "le facteur le dépose avec le courrier", "texte", a => deliverPaper(a.text || "L'Écho du Val.")],
+  radio: ["Un message à la radio", "une émission de la radio locale", "texte", a => { S.radioMsg = (a.text || "").slice(0, 300); }],
+  courant_off: ["Coupure de courant", "une panne sur la ligne électrique", null, () => { house().power = false; }],
+  courant_on: ["Retour du courant", "la ligne est réparée", null, () => { house().power = true; }],
+  eau_off: ["Coupure d'eau", "une coupure sur le réseau d'eau", null, () => { const H = house(); H.water = false; for (const c of S.chars.filter(c => !c.dead && !c.sleeping && inHut(c.x, c.y))) log("Un bruit sourd dans les tuyaux de la maison, puis plus rien.", c); }],
+  eau_on: ["Retour de l'eau", "le réseau est rétabli", null, () => { const H = house(); H.water = true; for (const c of S.chars.filter(c => !c.dead && !c.sleeping && inHut(c.x, c.y))) log("Les tuyaux de la maison cognent un instant : l'eau revient.", c); }],
+  orage: ["Un orage", "le temps tourne à l'orage", null, () => { const W_ = S.weather; W_.kind = "orage"; W_.until = S.t + rand(40, 100); pushJournal({ t: S.t, text: "Le ciel devient noir et lourd ; un premier coup de tonnerre roule au loin.", ai: false, by: null, aud: S.chars.filter(c => !c.dead && !c.sleeping).map(c => c.id), w: 5 }); }],
+  portail_ouvert: ["Ouvrir le portail", "une silhouette en imperméable retire la chaîne", null, () => { const f = house().gate; house().gate = "ouvert"; gateChanged(f, "ouvert"); }],
+  portail_ferme: ["Verrouiller le portail", "une silhouette remet la chaîne et le cadenas", null, () => { const f = house().gate; house().gate = "verrouille"; gateChanged(f, "verrouille"); }],
+  lena: ["Visite de Léna", "elle arrive par la route du village", null, () => { if (S.puppet?.present) return; S.lenaArriveAt = S.t; }],
+  objet: ["Un objet par-dessus la clôture", "lancé de l'extérieur, par-dessus la clôture", "objet", a => dropItem(a.item || "pomme", "hasard")],
+};
+const scen = () => (S.scenarios = S.scenarios || []);
+function tickScenarios() {
+  if (!running) return;
+  for (const sc of scen()) {
+    if (!sc.active) continue;
+    const i = sc.steps.findIndex(s => !s.done); if (i < 0) continue;
+    const s = sc.steps[i], prev = sc.steps[i - 1], T = s.trig;
+    const ready = T.type === "moment" ? S.t >= (Math.max(1, +T.day || 1) - 1) * 1440 + (+T.hour || 0) * 60
+      : T.type === "apres" ? (!prev || (prev.done && S.t >= prev.firedAt + (+T.after || 0)))
+      : !!SC_CONDS[T.cond]?.[1]();
+    if (!ready) continue;
+    s.done = true; s.firedAt = S.t;
+    try { SC_ACTIONS[s.act.type]?.[3](s.act); } catch (e) { console.warn(e); }
+    renderScenarios();
+  }
+}
+
+/* ---------- L'éditeur (Commandes › Scénarios) ---------- */
+function renderScenarios() {
+  const box = document.getElementById("scList"); if (!box) return;
+  box.innerHTML = scen().map((sc, k) => `<div class="sc-item"><div class="sc-head"><b>${esc(sc.name)}</b><button class="toggle" data-sc="${k}" data-op="toggle" aria-pressed="${sc.active}">${sc.active ? "Actif" : "Inactif"}</button><button class="btn small ghost" data-sc="${k}" data-op="sel">Modifier</button><button class="btn small ghost" data-sc="${k}" data-op="del">Supprimer</button></div><ol>${sc.steps.map(s => `<li class="${s.done ? "done" : ""}">${esc(trigWords(s.trig))} → <b>${esc(SC_ACTIONS[s.act.type]?.[0] || "?")}</b>${s.act.text ? " « " + esc(s.act.text.slice(0, 60)) + " »" : ""}${s.act.item ? " (" + esc(itemLabel(s.act.item)) + ")" : ""} <small>— ${esc(SC_ACTIONS[s.act.type]?.[1] || "")}</small>${s.done ? " ✓" : ""}</li>`).join("")}</ol></div>`).join("") || `<p class="note">Aucun scénario. Créez-en un, puis ajoutez-lui des étapes.</p>`;
+  const sel = document.getElementById("scTarget"); if (sel) sel.innerHTML = scen().map((sc, k) => `<option value="${k}">${esc(sc.name)}</option>`).join("");
+  if (sel && SCN.sel != null) sel.value = SCN.sel;
+}
+const SCN = { sel: null };
+function trigWords(T) { return T.type === "moment" ? `Jour ${T.day}, ${String(T.hour).padStart(2, "0")} h` : T.type === "apres" ? `${T.after} min après l'étape précédente` : `Quand : ${SC_CONDS[T.cond]?.[0] || "?"}`; }
+(function scenarioPanel() {
+  const root = document.getElementById("scEditor"); if (!root) return;
+  const trig = document.getElementById("scTrig"), act = document.getElementById("scAct"), cond = document.getElementById("scCond"), item = document.getElementById("scItem");
+  for (const [k, l] of Object.entries(SC_TRIGGERS)) trig.add(new Option(l, k));
+  for (const [k, [l]] of Object.entries(SC_CONDS)) cond.add(new Option(l, k));
+  for (const [k, [l]] of Object.entries(SC_ACTIONS)) act.add(new Option(l, k));
+  for (const k of Object.keys(ITEMS)) item.add(new Option(itemLabel(k), k));
+  const sync = () => {
+    const T = trig.value, A = SC_ACTIONS[act.value];
+    document.getElementById("scMomentRow").hidden = T !== "moment"; document.getElementById("scAfterRow").hidden = T !== "apres"; document.getElementById("scCondRow").hidden = T !== "condition";
+    document.getElementById("scTextRow").hidden = A[2] !== "texte"; document.getElementById("scItemRow").hidden = A[2] !== "objet";
+    document.getElementById("scCause").textContent = `Cause dans leur monde : ${A[1]}.`;
+  };
+  trig.onchange = sync; act.onchange = sync; sync();
+  document.getElementById("scNew").onclick = () => { const n = document.getElementById("scName").value.trim() || `Scénario ${scen().length + 1}`; scen().push({ name: n, active: true, steps: [] }); SCN.sel = scen().length - 1; document.getElementById("scName").value = ""; renderScenarios(); };
+  document.getElementById("scAdd").onclick = () => {
+    const k = +document.getElementById("scTarget").value; const sc = scen()[k]; if (!sc) return;
+    const T = { type: trig.value, day: +document.getElementById("scDay").value || 1, hour: +document.getElementById("scHour").value || 0, after: +document.getElementById("scAfter").value || 0, cond: cond.value };
+    const A = { type: act.value, text: document.getElementById("scText").value.trim(), item: item.value };
+    if (!SC_ACTIONS[A.type][1]) return;                                           // pas de cause, pas d'action
+    sc.steps.push({ trig: T, act: A, done: false }); document.getElementById("scText").value = ""; SCN.sel = k; renderScenarios();
+  };
+  document.getElementById("scList").onclick = e => {
+    const b = e.target.closest("button"); if (!b) return; const k = +b.dataset.sc, sc = scen()[k]; if (!sc) return;
+    if (b.dataset.op === "toggle") sc.active = !sc.active; else if (b.dataset.op === "del") scen().splice(k, 1); else SCN.sel = k;
+    renderScenarios();
+  };
+  document.getElementById("scExport").onclick = async () => { document.getElementById("scNote").textContent = await offerFile("jardin-clos-scenarios.json", JSON.stringify(scen(), null, 2)); };
+  renderScenarios();
+})();
+
+</script>
+<script>
+/* =====================================================================
+   diagnostic.js — LES OUTILS QUI PROTÈGENT L'ILLUSION (étape 9)
+   - Diagnostic (onglet IA) : relit les prompts réels de Théo et Clémence à la
+     recherche de mots ou tournures qui trahiraient la mise en scène, de
+     prénoms qu'ils ne devraient pas connaître, de titres ou de valeurs
+     cassées ; vérifie aussi la cohérence du monde et la sauvegarde.
+   - Résumé du jour (onglet Journal) : chaque matin, ce qui s'est passé la
+     veille, pour repérer à temps les moments où ils doutent.
+   - Caméra automatique : en mode spectateur, elle se place sur les moments
+     importants ; les paroles s'affichent en sous-titres.
+   ===================================================================== */
+
+const TELLS = [
+  [/(\bpantin\b|\bpuppet\b|\blena_|\bnpc\b|\bpnj\b|\bobservateur\b|\bjoueur\b|\bniveau \d|\bjson\b|\{"type"|\bprompt\b|\bundefined\b|\bNaN\b|\[object)/, "mot technique ou valeur cassée"],
+  [/(simulation|jeu vidéo|\bun jeu\b|virtuel|programme informatique|intelligence artificielle|\bIA\b)/, "mot qui nomme la mise en scène"],
+  [/^#{1,6}\s/m, "titre de mise en forme"],
+  [/\b[a-z]+_[a-z]+(_[a-z]+)?\b/, "identifiant technique (avec des tirets bas)"],
+];
+function runDiagnostic() {
+  const out = [], add = (level, text) => out.push({ level, text });
+  for (const c of S.chars) {
+    if (c.dead || c.gone) continue;
+    const dream = cc => thoughtPrompt({ ...cc, sleeping: true });
+    for (const [kind, fn] of [["décision", buildPrompt], ["pensée", thoughtPrompt], ["rêve", dream], ["réflexion", reflectPrompt], ["plan du jour", planPrompt], ["mémoire de la nuit", consolidationPrompt]]) {
+      let txt = ""; try { txt = fn(c); } catch (e) { add("rouge", `Prompt de ${kind} de ${who(c)} : erreur à la construction (${e.message}).`); continue; }
+      const body = frameOn() ? txt.split("\n").slice(1).join("\n") : txt;   // la ligne de cadre, si elle est active, est voulue
+      if (!frameOn()) { const m = body.replace(/«[^»]*»/g, "").match(/\b(fiction|récit|personnage|voix intérieure|rôle)\b/i); if (m) add("rouge", `Prompt de ${kind} de ${who(c)} : mot qui révèle la fiction alors que le cadre est coupé (« ${m[0]} »).`); }
+      const ours = body.replace(/«[^»]*»/g, "");                     // ce qu'ils disent ou pensent eux-mêmes n'est pas un indice venant du jeu
+      TELLS.forEach(([re, what], i) => { const m = (i === 1 ? ours : body).match(re); if (m) add("rouge", `Prompt de ${kind} de ${who(c)} : ${what} (« ${m[0]} »).`); });
+      for (const o of S.chars) if (o !== c && o.name && !c.knows[o.id] && body.includes(o.name)) add("rouge", `${who(c)} lit le prénom « ${o.name} » sans l'avoir jamais entendu.`);
+      if (S.puppet?.name && !c.knows.pantin && body.includes(S.puppet.name)) add("rouge", `${who(c)} lit le prénom « ${S.puppet.name} » sans l'avoir jamais entendu.`);
+      if (txt.length > 14000) add("orange", `Prompt de ${kind} de ${who(c)} très long (${txt.length} caractères) : coûteux et dilué.`);
+    }
+    for (const k of ["food", "water", "energy", "health", "warmth", "x", "y"]) if (!Number.isFinite(c[k])) add("rouge", `${who(c)} : valeur « ${k} » cassée (${c[k]}).`);
+    if (!c.outside && !c.gone && (c.x < 0 || c.y < 0 || c.x > W || c.y > W)) add("orange", `${who(c)} est hors du jardin sans y être sorti : position incohérente.`);
+  }
+  if (typeof checkIntegrity === "function" && checkIntegrity().length) add("rouge", "Un fichier du jeu ne s'est pas chargé.");
+  if (!["verrouille", "ferme", "ouvert"].includes(house().gate)) add("rouge", "État du portail inconnu.");
+  const p = S.puppet;
+  if (p?.present && p.dead) add("orange", "Léna est présente mais morte : son corps reste dans le jardin.");
+  if (p?.present && !Number.isFinite(p.x)) add("rouge", "Position de Léna cassée.");
+  try { const ok = saveGame(); const size = (localStorage.getItem(SAVE_KEY) || "").length; if (!ok) add("rouge", "La sauvegarde a échoué."); else if (size > 3e6) add("orange", `Sauvegarde lourde (${Math.round(size / 1024)} Ko).`); } catch { add("orange", "Sauvegarde impossible dans ce navigateur."); }
+  const doubts = S.chars.map(c => [c, doubtsOf(c).length]).filter(([, n]) => n);
+  for (const [c, n] of doubts) add("orange", `${who(c)} exprime ${n} doute${n > 1 ? "s" : ""} dans ses pensées récentes.`);
+  add("vert", `Cadre de fiction : ${frameOn() ? "présent (une ligne en tête)" : "absent : rien ne leur dit qu'il s'agit d'une fiction"}.`);
+  if (!out.some(x => x.level === "rouge")) add("vert", "Aucun indice dans les prompts (décision, pensée, rêve, réflexion, plan du jour, mémoire de la nuit), monde cohérent, sauvegarde en ordre.");
+  return out;
+}
+(function diagnosticPanel() {
+  const b = document.getElementById("diagRun"); if (!b) return;
+  b.onclick = () => {
+    const res = runDiagnostic(), ul = document.getElementById("diagList");
+    ul.innerHTML = res.map(r => `<li class="diag-${r.level}"><b>${r.level === "vert" ? "OK" : r.level === "orange" ? "Attention" : "Indice"}</b> ${esc(r.text)}</li>`).join("");
+  };
+})();
+
+/* ---------- Résumé du jour (pour vous) ---------- */
+function makeSummary(d) {
+  const from = (d - 1) * 1440, to = d * 1440, ev = S.journal.filter(e => e.t >= from && e.t < to);
+  if (!ev.length) return null;
+  const talk = S.chars.map(c => `${who(c)} a parlé ${ev.filter(e => e.by === c.id && e.kind === "dire").length} fois`).join(", ");
+  const strong = ev.filter(e => (e.w ?? 0) >= 8 && e.kind !== "pensee").slice(0, 6).reverse().map(e => `${hhmm(e.t)} — ${e.text}`);
+  const snap = S.affSnap || {}, links = [];
+  for (const c of S.chars) for (const o of S.chars.concat(S.puppet?.present ? [S.puppet] : [])) { if (o === c || !c.met?.[o.id]) continue; const now = Math.round(affOf(c, o)), before = snap[c.id + ":" + o.id] ?? now; if (Math.abs(now - before) >= 5) links.push(`${who(c)} → ${o.id === "pantin" ? o.name : who(o)} : ${before} → ${now}`); }
+  S.affSnap = {}; for (const c of S.chars) for (const o of S.chars.concat(S.puppet ? [S.puppet] : [])) if (o !== c) S.affSnap[c.id + ":" + o.id] = Math.round(affOf(c, o));
+  const doubts = S.chars.map(c => [c, doubtsOf(c).length]).filter(([, n]) => n).map(([c, n]) => `${who(c)} : ${n}`);
+  return { day: d, text: `Jour ${d}. ${talk}.`, strong, links, doubts };
+}
+function tickSummary() {
+  const h = (S.t % 1440) / 60, d = day(S.t);
+  if (h < 7 || d < 2 || (S.summaries || []).some(s => s.day === d - 1)) return;
+  const s = makeSummary(d - 1); if (!s) return;
+  S.summaries = (S.summaries || []).concat(s).slice(-14); renderSummary();
+}
+function renderSummary() {
+  const box = document.getElementById("dailySummary"); if (!box) return;
+  const s = (S.summaries || []).slice(-1)[0]; if (!s) { box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = `<b>Résumé de la veille</b><p>${esc(s.text)}</p>${s.strong.length ? `<ul>${s.strong.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}${s.links.length ? `<p>Liens : ${esc(s.links.join(" ; "))}</p>` : ""}${s.doubts.length ? `<p class="warn-note">Doutes : ${esc(s.doubts.join(", "))}</p>` : ""}`;
+}
+
+/* ---------- Caméra automatique et sous-titres ---------- */
+const AUTOCAM = { on: false, until: 0 };
+function autoCamEvent(e) {
+  if ((e.kind === "dire") && document.getElementById("subtitle")) {
+    const sub = document.getElementById("subtitle"), who2 = S.chars.find(c => c.id === e.by);
+    if (who2 || /^(la jeune femme|léna)/i.test(e.text) || e.by === null && /«/.test(e.text)) { sub.textContent = e.text.replace(/^(Théo|Clémence)/, m => m); sub.hidden = false; clearTimeout(AUTOCAM.t); AUTOCAM.t = setTimeout(() => { sub.hidden = true; }, 4500); }
+  }
+  if (!AUTOCAM.on) return;
+  const actor = S.chars.find(c => c.id === e.by);
+  if ((e.w ?? 0) >= 7 && actor && !actor.gone && performance.now() > AUTOCAM.until) { setFollow(actor.id); AUTOCAM.until = performance.now() + 9000; }
+}
+
+(function framePanel() {
+  const sel = document.getElementById("aiFrame"); if (!sel) return;
+  sel.value = AI.settings?.frame || "auto";
+  sel.onchange = () => { AI.settings.frame = sel.value; saveAISettings(); if (["claude", "anthropic"].includes(AI.provider) && sel.value === "off") setStatus("Attention : sans cadre de fiction, Claude refuse d'incarner Théo et Clémence. Le traducteur de secours prendra le relais, mais ils seront beaucoup moins vivants.", true); };
 })();
 
 </script>
