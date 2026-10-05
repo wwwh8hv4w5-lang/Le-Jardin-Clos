@@ -96,7 +96,7 @@
   </div>
 </div>
 
-<title>Le Jardin clos v0.95</title>
+<title>Le Jardin clos v0.98</title>
 <!--
   STRUCTURE DU JEU — chaque fichier a un seul rôle :
     style.css               mise en page et couleurs de la page
@@ -591,7 +591,7 @@ header.top { display: flex; justify-content: space-between; align-items: baselin
 <div class="wrap">
  <div class="col-view">
   <header class="top">
-    <h1>Le Jardin clos <span class="version" id="version">v0.95</span></h1>
+    <h1>Le Jardin clos <span class="version" id="version">v0.98</span></h1>
     <button class="btn ghost small menu-open" id="menuOpen" type="button">Menu</button>
     <button class="btn ghost small" id="lenaOpen" type="button">Léna</button>
     <span class="clock" id="clock">Jour 1 · 08:00</span>
@@ -862,6 +862,9 @@ header.top { display: flex; justify-content: space-between; align-items: baselin
       <select id="aiProvider"></select>
       <div id="aiFields" class="ai-fields"></div>
       <button class="btn" id="aiConnect" type="button">Connecter</button>
+      <label class="label" for="aiProfile">Profil des prompts</label>
+      <select id="aiProfile"><option value="auto">Automatique (complet pour Claude, resserré pour les autres)</option><option value="complet">Complet</option><option value="compact">Resserré</option></select>
+      <p class="note">Resserré : la traduction ne propose que les commandes utiles au récit et au lieu, au lieu de plus de 70. Plus clair pour un modèle de taille moyenne.</p>
       <label class="label" for="aiFrame">Cadre de fiction en tête de leurs prompts</label>
       <select id="aiFrame"><option value="auto">Automatique (seulement pour Claude, qui en a besoin)</option><option value="on">Toujours</option><option value="off">Jamais</option></select>
       <p class="note" id="aiFrameNote">Sans ce cadre, rien ne dit au modèle qu'il s'agit d'une fiction : il reçoit seulement le vécu du personnage. Claude refuse alors d'incarner une personne ; d'autres modèles jouent leur rôle sans difficulté.</p>
@@ -918,7 +921,7 @@ function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Ma
    ===================================================================== */
 
 // Version du jeu : à changer ici ET dans le <title> et le <h1> d'index.html à chaque mise à jour
-const GAME_VERSION = "0.95";
+const GAME_VERSION = "0.98";
 
 const CONFIG = {
   // --- Temps ---
@@ -1352,7 +1355,8 @@ const de_ = x => /^le /.test(x) ? "du " + x.slice(3) : "de " + x;
 
 const AI_DEFAULTS = {
   provider: "auto",
-  frame: "auto",                 // cadre de fiction en tête des prompts : auto (oui pour Claude), on, off
+  frame: "auto",
+  profile: "auto",               // prompts complets (Claude) ou resserrés (modèles moyens)                 // cadre de fiction en tête des prompts : auto (oui pour Claude), on, off
   openai:     { base: "https://api.openai.com/v1", key: "", quick: "gpt-4o-mini", default: "gpt-4o-mini", complex: "gpt-4o" },
   openrouter: { base: "https://openrouter.ai/api/v1", key: "", quick: "openrouter/auto", default: "openrouter/auto", complex: "openrouter/auto" },
   anthropic:  { key: "", quick: "claude-haiku-4-5-20251001", default: "claude-sonnet-5-5", complex: "claude-opus-5-5" },
@@ -1435,7 +1439,8 @@ const AIProviders = {
       return {
         max: 2,
         async complete(prompt, o) {
-          const body = { model: cfg[o.tier] || cfg.quick, max_tokens: o.json ? 1200 : 300, messages: [{ role: "user", content: prompt + (o.json ? JSON_HINT : "") }], stream: !!o.onText };
+          // température modérée (un récit vivant sans dérive), basse pour la traduction ; pénalités contre les redites
+          const body = { model: cfg[o.tier] || cfg.quick, max_tokens: o.maxTokens || (o.json ? 1200 : 300), temperature: o.json ? .2 : .75, top_p: .92, frequency_penalty: o.json ? 0 : .35, presence_penalty: o.json ? 0 : .2, messages: [{ role: "user", content: prompt + (o.json ? JSON_HINT : "") }], stream: !!o.onText };
           const res = await doFetch("https://api.anthropic.com/v1/messages", { method: "POST", signal: o.signal, headers: { "content-type": "application/json", "x-api-key": cfg.key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" }, body: JSON.stringify(body) });
           if (!res.ok) throw httpError(res.status, await res.text().catch(() => ""));
           if (o.onText) return readSSE(res, d => d.type === "content_block_delta" ? d.delta?.text : "", t => o.onText({ text: t }));
@@ -1464,7 +1469,7 @@ const AIProviders = {
           const stop = () => { try { engine.interruptGenerate(); } catch {} };
           o.signal?.addEventListener("abort", stop, { once: true });
           try {
-            const req = { messages: [{ role: "user", content: prompt + (o.json ? JSON_HINT : "") }], temperature: .85, max_tokens: o.json ? 900 : 120 };
+            const req = { messages: [{ role: "user", content: prompt + (o.json ? JSON_HINT : "") }], temperature: .85, max_tokens: o.maxTokens || (o.json ? 900 : 120) };
             if (o.json) req.response_format = { type: "json_object" };
             if (o.onText) {
               let full = "";
@@ -1535,7 +1540,7 @@ function buildSampler(conn) {
     fn = (p, o) => enqueue(kindOf(o), () => conn.native(p, strip(o)), o?.signal);
     json = (p, o) => enqueue(kindOf(o), () => conn.native.json(p, strip(o)), o?.signal);
   } else {
-    const run = (p, o, asJson) => conn.complete(p, { tier: o?.modelTier || "quick", json: asJson, signal: o?.signal, onText: o?.onText });
+    const run = (p, o, asJson) => conn.complete(p, { tier: o?.modelTier || "quick", json: asJson, signal: o?.signal, onText: o?.onText, maxTokens: o?.maxTokens });
     fn = (p, o) => enqueue(kindOf(o), async () => ({ text: await run(p, o, false), truncated: false }), o?.signal);
     json = (p, o) => enqueue(kindOf(o), async () => parseJSONText(await run(p, o, true)), o?.signal);
   }
@@ -1979,10 +1984,11 @@ function visibleThings(c) {
     add(...HOUSE.sofa, "un vieux canapé en tissu", true);
     add(...HOUSE.table, lampView(c).replace(/^une petite table/, "une table et deux chaises"), true);
     add(180, 360, "un tapis rond", true);
-    add(HEARTH.x, HEARTH.y, (S.env?.fires || []).some(f => f.where === "cheminee") ? "la cheminée en pierre, où un feu brûle" : "une cheminée en pierre, éteinte", true);
+    { const logs = house().logs ?? 0;
+      add(HEARTH.x, HEARTH.y, `${(S.env?.fires || []).some(f => f.where === "cheminee") ? "la cheminée en pierre, où un feu brûle" : "une cheminée en pierre, éteinte"}${logs ? " ; à côté, un panier avec " + (logs > 6 ? "une bonne réserve de bûches" : logs > 2 ? "quelques bûches" : "deux dernières bûches") : " ; le panier à bûches, à côté, est vide"}`, true); }
     add(...HOUSE.stove, `un coin cuisine : un évier, deux plaques électriques${powerOn() ? "" : " (sans courant)"} et un petit réfrigérateur${(S.fridge || []).length ? " où tu as rangé des fruits" : ""}`, true);
     add(HOUSE.switch[0], HOUSE.switch[1], `un interrupteur ; au plafond, une ampoule ${bulbLit() ? "allumée" : "éteinte"}`, true);
-    for (const it of S.items || []) if (inHut(it.x, it.y)) add(it.x, it.y, `${itemLabel(it.type)}${it.inHouse ? ", " + it.inHouse : " par terre"}`, true);
+    for (const it of S.items || []) if (inHut(it.x, it.y) && roomOf(it.x, it.y) === roomOf(c.x, c.y)) add(it.x, it.y, `${itemLabel(it.type)}${it.inHouse ? ", " + it.inHouse : " par terre"}`, true);
     if (S.condoms > 0) add(...CONFIG.condomPos, `${S.condoms} préservatif${S.condoms > 1 ? "s" : ""} neuf${S.condoms > 1 ? "s" : ""}, encore emballé${S.condoms > 1 ? "s" : ""}, dans le tiroir de la table de nuit`, true);
     if (!S.bag.carriedBy && inHut(S.bag.x, S.bag.y)) add(S.bag.x, S.bag.y, "le sac à dos", true);
     if (o && o.dead && inHut(o.x, o.y)) add(o.x, o.y, `le corps sans vie ${de_(nameFor(c, o))}`, true);
@@ -2094,7 +2100,7 @@ function firstPersonView(c) {
     const keep = list.slice().sort((a, b) => score(a) - score(b)).slice(0, max), kept = new Set(keep);
     return list.filter(t => kept.has(t)).map(line).join("\n") + "\n- " + rest;
   };
-  return `${head} ${touchFeelings(c)} Ce que tu vois autour de toi :\n${salient(things, 7, "et le reste du jardin, familier, que ton regard survole") || "- rien de particulier"}${beyond.length ? (c.outside ? "\nPlus loin, dans la campagne et derrière la clôture du jardin :\n" : "\nPlus loin, à travers les planches de la clôture :\n") + salient(beyond, 6, "et, tout autour, le reste de la campagne") : ""}${behind.length ? "\nDans ton dos, que tu ne vois pas mais dont tu te souviens : " + [...new Set(behind)].join(", ") + "." : ""}`;
+  return `${head} ${touchFeelings(c)} Ce que tu vois autour de toi :\n${salient(things, inHut(c.x, c.y) ? 12 : 7, inHut(c.x, c.y) ? "et le reste de la pièce" : "et le reste du jardin, familier, que ton regard survole") || "- rien de particulier"}${beyond.length ? (c.outside ? "\nPlus loin, dans la campagne et derrière la clôture du jardin :\n" : "\nPlus loin, à travers les planches de la clôture :\n") + salient(beyond, 6, "et, tout autour, le reste de la campagne") : ""}${behind.length ? "\nDans ton dos, que tu ne vois pas mais dont tu te souviens : " + [...new Set(behind)].join(", ") + "." : ""}`;
 }
 
 </script>
@@ -3916,10 +3922,15 @@ ACTIONS.ramasser_bois = {
   }
 };
 ACTIONS.faire_feu = {
-  prompt: c => gearOf(c).bois >= 2 ? `{"type":"faire_feu","lieu":"centre" | "cheminee" | "ici"} : essayer d'allumer un feu avec 2 morceaux de bois (sans allumettes, frotter du bois est long et souvent vain ; la pluie l'empêche dehors)` : null,
+  prompt: c => `{"type":"faire_feu","lieu":"cheminee" | "centre" | "ici"} : allumer un feu (dans la cheminée, avec les bûches du panier et les allumettes de la table ; dehors, avec 2 morceaux de bois ramassés ; sans allumettes, frotter du bois est long et souvent vain)`,
   async run(c, a) {
     const g = gearOf(c), K = CONFIG.env, where = fireSpot(c, a.lieu);
-    if (g.bois < 2) { log(`${who(c)} n'a pas assez de bois pour faire un feu.`, c); return; }
+    const H = house();
+    if (g.bois < 2 && where === "cheminee" && (H.logs ?? 0) >= 2) { await goTo(c, HEARTH.x - 20, HEARTH.y + 10); H.logs -= 2; g.bois = (g.bois || 0) + 2; log(`${who(c)} prend deux bûches dans le panier, près de la cheminée.`, c, false, true, 2); }
+    if (g.bois < 2) {                                                     // pas de bois : on va en ramasser d'abord
+      if (typeof ACTIONS.ramasser_bois?.run === "function" && !a._gathered) { log(`${who(c)} n'a pas de bois : ${where === "cheminee" ? "le panier est vide, " : ""}il faut d'abord en ramasser.`, c, false, true, 3); await ACTIONS.ramasser_bois.run(c, {}); if (gearOf(c).bois >= 2) return ACTIONS.faire_feu.run(c, { ...a, _gathered: true }); }
+      log(`${who(c)} n'a pas assez de bois pour faire un feu.`, c); return;
+    }
     c.doing = "Prépare un feu";
     if (where === "cheminee") await goTo(c, HEARTH.x + 18, HEARTH.y - 8); else if (where === "centre") await goPOI(c, "centre");
     const outside = where !== "cheminee";
@@ -4834,6 +4845,7 @@ function looseView(c) {
   const out = [];
   for (const l of S.loose || []) {
     if (inHut(l.x, l.y) !== inHut(c.x, c.y)) continue;
+    if (inHut(c.x, c.y) && roomOf(l.x, l.y) !== roomOf(c.x, c.y)) continue;            // les murs arrêtent le regard
     const d = Math.hypot(l.x - c.x, l.y - c.y); if (d > sightRange() || !seenFrom(c, l.x, l.y, d)) continue;
     const seenAs = blurThing(c, l.x, l.y, "x", l.k === "debris" ? "debris" : l.k === "pierre" ? "pierre" : "objet"); if (!seenAs) continue;
     if (seenAs !== "x") { out.push([d, `${relDir(c, l.x, l.y)}, ${distWords(d)} : ${seenAs}`]); continue; }
@@ -4929,6 +4941,10 @@ function localInterpret(c, story) {
   if (want(/\b(toilettes|pipi|faire mes besoins|aux wc|envie pressante)/)) acts.push({ type: "faire_ses_besoins", besoin: /caca|la selle|grosse commission/.test(s) ? "caca" : "pipi", cible: "toilettes" });
   if (want(/\b(tirer la chasse|la chasse d'eau)/)) acts.push({ type: "tirer_chasse" });
   if (want(/\b(fouille|ouvre le sac|le sac)/)) acts.push({ type: "fouiller_sac" });
+  if (want(/\b(couper du bois|fendre|la hache|des bûches|du bois pour)/)) acts.push({ type: "fendre_bois" });
+  else if (want(/\b(ramasser du bois|des branches|du petit bois|brindilles)/)) acts.push({ type: "ramasser_bois" });
+  if (want(/\b(faire (un|du) feu|allumer (un|le) feu|allumer la cheminée|craquer une allumette|les allumettes)/)) acts.push({ type: "faire_feu", lieu: inHut(c.x, c.y) || !c.outside ? "cheminee" : "ici" });
+  if (want(/\b(me réchauffer|près du feu|au coin du feu)/)) acts.push({ type: "se_rechauffer" });
   if (want(/\b(lettre|courrier|boîte aux lettres|boite aux lettres|le journal|drapeau)/) && want(/\b(lire|lis|relever|ouvrir|ouvre|regarder|voir|prendre|chercher)/)) acts.push({ type: "relever_courrier" });
   if (!acts.length || acts.every(a => a.type === "dire")) acts.push(acts.length ? { type: "se_reposer", minutes: 5 } : { type: "regarder", autour: true });
   return acts.slice(0, CONFIG.maxActionsPerDecision);
@@ -5026,6 +5042,12 @@ function fenceSense(c) {
   const sides = [[c.x - 16, "de la clôture, à l'ouest"], [c.y - 16, "de la clôture, au nord"], [W - 16 - c.y, "de la clôture, au sud"], [RIVER_X - c.x, "de la rivière, à l'est"]].sort((a, b) => a[0] - b[0]);
   return `, ${distWords(Math.max(0, sides[0][0]))} ${sides[0][1]}`;
 }
+// Ressemblance entre deux textes (mots en commun) : sert à repérer un personnage qui se répète
+function similarity(a, b) {
+  const w = t => new Set(String(t).toLowerCase().match(/[a-zàâäéèêëîïôöûüç]{4,}/g) || []);
+  const A = w(a), B = w(b); if (!A.size || !B.size) return 0;
+  let n = 0; for (const x of A) if (B.has(x)) n++; return n / Math.min(A.size, B.size);
+}
 function describe(c) {
   const d = DEF(c.id), firstHours = c.wokeAt != null && S.t - c.wokeAt < 90 && day(S.t) === day(c.wokeAt);
   const body = [bodyFeelings(c), bodyLifeFeelings(c)].filter(Boolean).join(" "), emo = emotionFeelings(c), looks = selfLooks(c), hab = habits(c);
@@ -5065,7 +5087,6 @@ ${describeSecrets(c)}
 ${knownText(c)}
 ${innerLifeText(c)}
 ${innerThread(c)}
-${lastStory}
 ${typeof historyText === "function" ? historyText(c) : ""}
 ${mergedMemories(c)}`.replace(/\n{3,}/g, "\n\n");
   return vary(capitalizeLines(text), c);
@@ -5101,7 +5122,17 @@ function smartCut(t, n) {
 }
 // Refus et mises en garde d'un modèle (en français) : jamais affichés comme une pensée, comptés comme sortie de rôle
 const REFUSAL_RE = /(je (suis|me vois) (désolée?|navrée?),? mais|je ne (peux|vais) pas (créer|générer|écrire|produire|continuer|participer|répondre|fournir|décrire)|contenu (inapproprié|qui décrit|explicite)|ne respecte pas (mes|les) (règles|consignes|directives|politiques)|politique (de contenu|d'utilisation)|je préfère ne pas (écrire|continuer)|en tant que (modèle|assistant))/i;
-const isMeta = t => { if (REFUSAL_RE.test(String(t || ""))) return true; const s = String(t || ""); return META_RE.test(s) || META_EN_RE.test(s) || looksEnglish(s); };
+// Charabia (un modèle qui dérape) : trop peu de mots français courants, ou des majuscules au hasard
+const FR_COMMON = new Set("je tu il elle on nous vous ils le la les un une des de du et mais ou que qui ne pas plus est suis ce cette mon ma mes ton ta ses son sa au aux en dans sur pour avec me te se si tout très bien là ici comme quoi où j l d qu n m t s c y à c'est".split(" "));
+function isGarbage(t) {
+  const w = String(t || "").toLowerCase().replace(/[’']/g, " ").match(/[a-zàâäéèêëîïôöûüç]+/g) || []; if (w.length < 12) return false;
+  const fr = w.filter(x => FR_COMMON.has(x)).length;
+  const caps = (String(t).match(/[a-zà-ü,]\s+[A-Z][a-z]+/g) || []).length;
+  if (fr / w.length < .12 || caps / w.length > .15) return true;
+  // un récit qui commence bien puis déraille : on regarde aussi la fin
+  const tail = w.slice(-20); return tail.length >= 16 && tail.filter(x => FR_COMMON.has(x)).length / tail.length < .08;
+}
+const isMeta = t => { if (REFUSAL_RE.test(String(t || "")) || isGarbage(t)) return true; const s = String(t || ""); return META_RE.test(s) || META_EN_RE.test(s) || looksEnglish(s); };
 /* Le cadre minimal. Sans lui, le modèle refuse de « se faire passer » pour un humain (il l'a fait :
    « I need to clarify my role »). C'est voulu de sa part, et on ne peut pas le contourner. On lui dit
    donc, honnêtement et en une ligne, qu'il écrit la voix intérieure d'un personnage ; tout le reste du
@@ -5146,13 +5177,30 @@ ${identity}
 ${c.relations && !/^(rien|aucune?|personne|vide|-)\.?$/i.test(c.relations.trim()) ? "Ce que tu pensais des autres, la dernière fois : " + c.relations + "\n\n" : ""}${describe(c)}
 
 ${focusNudge(c)}
-${frameOn() ? "Et là, maintenant, en toi : ce que tu remarques, ce que tu ressens, ce qui te traverse l'esprit, et ce que tu fais (ce que tu dis à voix haute, entre « »). Quelques phrases, au présent, à la première personne :" : "Et là, maintenant, en toi ? Ce que tu remarques, ce que tu ressens, ce qui te traverse l'esprit, ce que tu fais — et ce que tu dis à voix haute, entre « »."}`.replace(/\n{3,}/g, "\n\n");
+${frameOn() ? "Et là, maintenant, en toi : ce que tu fais, ce que tu dis à voix haute (entre « »), ce que tu ressens. Quelques phrases, pas plus, au présent, à la première personne :" : "Et là, maintenant ? Ce que tu fais, ce que tu dis à voix haute (entre « »), ce que tu ressens. Quelques phrases, pas plus."}`.replace(/\n{3,}/g, "\n\n");
 }
 
 // Le traducteur : récit intérieur → commandes du moteur (ce texte n'est jamais montré au personnage)
+// Pour un modèle moyen, la liste complète des commandes (plus de 70) noie l'essentiel : on ne garde que celles
+// qui ont un rapport avec le récit, le lieu ou l'état de la personne.
+const CORE_ACTIONS = ["aller", "explorer", "regarder", "dire", "libre", "manger", "boire", "cueillir", "ramasser", "dormir", "se_reposer", "consommer", "faire_ses_besoins", "geste", "se_laver", "relever_courrier", "fouiller_sac", "faire_feu"];
+const HOUSE_ACTIONS = ["boire_robinet", "se_doucher", "allumer_lumiere", "eteindre_lumiere", "cuire", "prendre_frigo", "ranger_frigo", "se_changer", "tirer_chasse", "se_laver_les_mains", "prendre_objet", "ecouter_radio", "fendre_bois", "se_rechauffer", "alimenter_feu", "allumer_lanterne", "ecrire_mot"];
+const ACTION_WORDS = { faire_feu: /feu|allum|chemin|flamme/, fendre_bois: /bois|hache|fend|bûche|buche|couper/, ramasser_bois: /bois|branche|brindille/, alimenter_feu: /feu|bûche|buche/, se_rechauffer: /chaud|froid|réchauff|rechauff/, cuire: /cuire|cuisin|chauff|plaque/, boire_robinet: /robinet|eau|boire|soif/, se_doucher: /douche/, prendre_objet: /prend|attrap|saisi/, utiliser_objet: /utilis|allume|ouvre/, donner_objet: /donn|tend|offre/, proposer_intimite: /intime|embrass|dormir avec|faire l'amour/, frapper: /frapp|cogn|gifl|coup/, nager: /nag|baign/, ouvrir_portail: /portail|sortir|cadenas/, ouvrir_caisse: /caisse|cabanon/, tirer: /tir|revolver|pistolet|arme/, graver_signe: /grav/, ecrire_mot: /écri|ecri|mot|note/, gauler: /gaul|branche|fruit/, fabriquer: /fabriqu|construi/, cacher: /cach/, se_soigner: /soign|blessure|plaie/, soigner_autre: /soign/, secourir: /secour|noy/ };
+function promptProfile() { const m = AI.settings?.profile || "auto"; return m === "auto" ? (["claude", "anthropic"].includes(AI.provider) ? "complet" : "compact") : m; }
+function relevantActions(c, story) {
+  const st = String(story || "").toLowerCase(), inside = inHut(c.x, c.y) || Math.hypot(c.x - DOOR_OUT[0], c.y - DOOR_OUT[1]) < 120;
+  const keep = new Set(CORE_ACTIONS);
+  if (inside) HOUSE_ACTIONS.forEach(k => keep.add(k));
+  if (c.warmth < CONFIG.coldBelow) ["faire_feu", "ramasser_bois", "fendre_bois", "se_rechauffer"].forEach(k => keep.add(k));
+  if ((c.items || []).length) ["utiliser_objet", "donner_objet", "jeter", "poser_objet"].forEach(k => keep.add(k));
+  if (c.outside || Math.hypot(c.x - GATE.inside[0], c.y - GATE.inside[1]) < 120) ["ouvrir_portail", "sortir_portail", "rentrer_portail", "partir", "suivre_villageois"].forEach(k => keep.add(k));
+  if (S.proposal && S.proposal.to === c.id) ["accepter_intimite", "refuser_intimite"].forEach(k => keep.add(k));
+  for (const [k, re] of Object.entries(ACTION_WORDS)) if (re.test(st)) keep.add(k);
+  return keep;
+}
 function interpretPrompt(c, story) {
-  const first = !c.trait, o = otherOf(c);
-  const actions = Object.values(ACTIONS).map(a => a.prompt(c)).filter(Boolean).map(p => "- " + p).join("\n");
+  const first = !c.trait, o = otherOf(c), compact = promptProfile() === "compact", keep = compact ? relevantActions(c, story) : null;
+  const actions = Object.entries(ACTIONS).filter(([k]) => !keep || keep.has(k)).map(([, a]) => a.prompt(c)).filter(Boolean).map(p => "- " + p).join("\n");
   return `Tu convertis le récit intérieur d'une personne en commandes pour un moteur. Ne juge pas, n'invente rien : traduis seulement ce qu'elle décide de faire maintenant, dans l'ordre où elle le raconte.
 
 Contexte : la personne se trouve ${placeOf(c)}${typeof puppetContext === "function" ? puppetContext(c) : ""} ; elle tient ${fruitList(c.hand)} fruit(s)${(c.items || []).length ? " et " + c.items.map(itemLabel).join(", ") : ""}${o && !o.dead ? ` ; l'autre personne (qu'elle appelle « ${nameFor(c, o)} ») est ${dist(c, o) < 60 ? "tout près" : "plus loin dans le jardin"}` : ""}.
@@ -5182,13 +5230,14 @@ async function decide(c) {
   const ctl = new AbortController();
   const timer = S.aiOk ? setTimeout(() => ctl.abort(), CONFIG.focus.maxThinkSeconds * 1000) : null; // pas de délai tant que l'autorisation n'a pas été donnée
   try {
-    story = cleanModelText((await sample(buildPrompt(c), { modelTier: CONFIG.modelTier, cache: false, signal: ctl.signal, priority: "decision" }))?.text);
+    story = cleanModelText((await sample(buildPrompt(c), { modelTier: CONFIG.modelTier, cache: false, signal: ctl.signal, priority: "decision", maxTokens: 650 }))?.text);
     S.aiOk = true;
     auditText(c, story, "décision");
     if (!story || isMeta(story)) {                                   // sortie de rôle : rien n'est montré, rappel la prochaine fois
       c.metaSlip = (c.metaSlip || 0) + 1;
       return instinctPlan(c);
     }
+    const loop = c.lastStory && similarity(story, c.lastStory) > .7; c.loops = loop ? (c.loops || 0) + 1 : 0;
     c.lastStory = story.slice(0, 600); c.lastStoryT = S.t; c.stories = (c.stories || []).concat(story.slice(0, 500)).slice(-8);
     try { res = await sample.json(interpretPrompt(c, story), { modelTier: "quick", cache: false, signal: ctl.signal, priority: "decision" }); }
     catch (e) { if (e && e.code === "cancelled") throw e; res = null; }       // traduction illisible : le traducteur de secours prendra le relais
@@ -5207,6 +5256,7 @@ async function decide(c) {
     c.inner = (c.inner || []).concat({ t: S.t, text: c.thought, dream: false }).slice(-8);
     rt(c).lastThoughtAt = performance.now();
   }
+  if (c.loops >= 2) { c.loops = 0; return instinctPlan(c).concat({ type: "explorer" }).slice(0, 2); }   // il tourne en rond : l'instinct reprend la main (boire, manger, bouger)
   const acts = typeof repairPlan === "function" ? repairPlan(c, story, res) : (Array.isArray(res.actions) ? res.actions.filter(a => a && a.type).slice(0, CONFIG.maxActionsPerDecision) : []);
   return acts.length ? acts : instinctPlan(c);
 }
@@ -5242,7 +5292,7 @@ function instinctPlan(c) {
   if (c.water < 35) return [S.bag.items.eau > 0 ? { type: "consommer", objet: "eau" } : { type: "boire" }];
   if (c.food < 35) return [{ type: "manger" }];
   if (c.energy < 25 || (c.sleepDebt ?? 0) >= CONFIG.sleep.heavy || (sunInfo(S.t).alt < .03 && c.energy < 60)) return [{ type: "dormir", minutes: 240, lieu: lit ? "lit" : "ici" }];
-  if (c.warmth < CONFIG.coldBelow) return [{ type: "aller", cible: "cabane" }];
+  if (c.warmth < CONFIG.coldBelow) { const burning = (S.env?.fires || []).some(f => f.where === "cheminee"); return burning ? [{ type: "aller", cible: "cabane" }, { type: "se_rechauffer" }] : [{ type: "aller", cible: "cabane" }, { type: "faire_feu", lieu: "cheminee" }]; }
   if (c.hygiene < CONFIG.dirtyBelow) return [{ type: "se_laver", avec: "riviere" }];
   return [{ type: "explorer" }];
 }
@@ -5370,6 +5420,7 @@ async function thinkOnce(c, retry = false) {
       onText: ({ text }) => { R.innerLive = text; renderPersonThought(c); },
     });
     const t = smartCut(cleanModelText(text).replace(/^["«\s]+|["»\s]+$/g, "").split("\n")[0], 180);
+    if ((c.inner || []).slice(-4).some(x => similarity(x.text, t) > .8)) return;            // déjà pensé à l'instant : on ne le répète pas
     if (!t) return;
     auditText(c, t, c.sleeping ? "rêve" : "pensée");
     if (isMeta(t)) {                                   // sorti de son rôle : pensée ignorée, rappel la prochaine fois
@@ -5863,7 +5914,8 @@ const itemLabel = t => `${ITEMS[t].art} ${ITEMS[t].label}`;
    La boîte de la cabane en contient 20 ; chaque flamme en coûte une (parfois deux ou trois si le
    feu ne prend pas). Vide, la boîte ne sert plus à rien. */
 const matchesLeft = () => (S.matches ?? (S.matches = 20));
-const hasMatches = c => (c.items || []).includes("allumettes") && matchesLeft() > 0;
+// des allumettes : dans la poche, ou la boîte restée sur la table du salon quand on est dans la maison
+const hasMatches = c => matchesLeft() > 0 && ((c.items || []).includes("allumettes") || (inHut(c.x, c.y) && (S.items || []).some(i => i.type === "allumettes" && i.inHouse && !i.carriedBy)));
 function useMatches(n = 1) { S.matches = Math.max(0, matchesLeft() - n); return S.matches; }
 const matchesWord = () => { const n = matchesLeft(); return n <= 0 ? "vide" : n === 1 ? "il n'en reste plus qu'une" : n <= 4 ? "il n'en reste que quelques-unes" : n <= 12 ? "il en reste une dizaine" : "presque pleine"; };
 const FALL_MS = 1400;
@@ -7332,6 +7384,7 @@ function setupHouse() {
     S.items = (S.items || []).filter(it => it.uid !== "torch" && it.uid !== "match");
     S.items.push({ uid: "torch", type: "lampe", x: 202, y: 300, inHouse: "sur la table du salon" }, { uid: "match", type: "allumettes", x: 214, y: 300, inHouse: "sur la table du salon" });
     if (S.matches == null) S.matches = 20;                     // la boîte contient 20 allumettes
+    if (H.logs == null) H.logs = 10;                             // un panier de bûches à côté de la cheminée
     S.loose = (S.loose || []).filter(l => l.k !== "hache" || !l.inHouse);
     S.loose.push({ k: "hache", x: HEARTH.x + 22, y: HEARTH.y + 6, t: S.t, inHouse: "appuyée contre la cheminée" });
     S.loose.push({ k: "couteau", x: HOUSE.nightstand[0], y: HOUSE.nightstand[1], t: S.t, inHouse: "posé sur la table de nuit" });
@@ -7414,11 +7467,12 @@ ACTIONS.partir = {
   async run(c) { if (!(await goOut(c))) { log(`${who(c)} trouve le portail fermé.`, c, false, false, 8); return; } await reachVillage(c); }
 };
 ACTIONS.fendre_bois = {
-  prompt: c => gearOf(c).hache ? `{"type":"fendre_bois"} : couper des branches mortes de l'arbre et les fendre à la hache, pour faire du bois de feu` : null,
+  prompt: c => gearOf(c).hache || inHut(c.x, c.y) ? `{"type":"fendre_bois"} : prendre la hache et couper des branches mortes de l'arbre, puis les fendre en bûches pour le feu` : null,
   async run(c) {
-    const g = gearOf(c); c.doing = "Coupe du bois à la hache"; await goPOI(c, "arbre"); await waitMin(c, 30);
+    if (!gearOf(c).hache) { const ax = (S.loose || []).find(l => l.k === "hache"); if (ax) { await goTo(c, ax.x, ax.y + 4); S.loose = S.loose.filter(l => l !== ax); gearOf(c).hache = 1; log(`${who(c)} prend la hache ${ax.inHouse || "posée là"}.`, c, false, true, 3); } else { log(`${who(c)} cherche la hache, sans la trouver.`, c); return; } }
+    const g = gearOf(c); c.doing = "Coupe du bois à la hache"; await goPOI(c, "arbre"); await waitMin(c, 30); const H = house(); if (inHut(HEARTH.x, HEARTH.y)) H.logs = Math.min(16, (H.logs ?? 0) + 4);
     c.energy = clamp(c.energy - 12, 0, 100); g.bois = Math.min(CONFIG.env.carryWood + 4, (g.bois || 0) + 4); c.crafted = (c.crafted || 0) + 1;
-    log(`${who(c)} coupe des branches mortes à la hache et les fend en bûches.`, c);
+    log(`${who(c)} coupe des branches mortes à la hache et les fend en bûches${(house().logs ?? 0) ? ", dont quelques-unes rangées dans le panier près de la cheminée" : ""}.`, c);
     if (Math.random() < .05) { c.injuries = (c.injuries || []).concat({ id: "hache", label: "une entaille au pied, faite par la hache", pain: 45, limp: .4, since: S.t }); log(`${who(c)} se blesse : la hache dérape et lui entaille le pied !`, c, false, false, 10); criticalEvent(c, "Blessure à la hache"); }
   }
 };
@@ -9403,7 +9457,7 @@ async function offerFile(filename, text) {
 function experimentData() {
   return {
     jeu: "Le Jardin clos", version: GAME_VERSION, exporte_le: new Date().toISOString(),
-    ia: { fournisseur: AI.provider, appels_session: AI.stats, appels_par_jour: S.aiCalls || {} },
+    ia: { fournisseur: AI.provider, modeles: (AI.settings && AI.settings[AI.provider]) ? { rapide: AI.settings[AI.provider].quick, normal: AI.settings[AI.provider].default } : null, cadre_de_fiction: typeof frameOn === "function" ? frameOn() : null, appels_session: AI.stats, appels_par_jour: S.aiCalls || {}, traduction: S.interp || null },
     temps: { jour: day(S.t), heure: hhmm(S.t) },
     coherence: S.audit || null, relectures: S.bench || [],
     personnages: S.chars.map(c => ({ id: c.id, nom: who(c), temperament: c.trait || null, vivant: !c.dead,
@@ -10365,6 +10419,8 @@ const INTENTS = [
   ["qui", /(qui es-tu|qui es tu|t'es qui|tes qui|vous etes qui|qui etes|tu fais quoi ici|qu'est-ce que tu fais (la|ici)|d'ou tu viens|tu viens d'ou|tu sors d'ou|t'habites ou|tu habites ou)/],
   ["ou", /(ou (on est|sommes-nous|sommes nous|est-ce qu'on est|suis-je|je suis|est-ce que je suis)|c'est quoi (cet endroit|ce jardin|ici)|quel (endroit|village|coin))/],
   ["pourquoi", /(pourquoi (on est|sommes|je suis|nous|on nous)|qui nous a|qui m'a|qui a (ferme|enferme|mis)|comment (on est|je suis|nous sommes) arrive|on fait quoi ici)/],
+  ["perdu", /(je suis perdue?|je ne sais (pas|plus) (quoi faire|ou je suis|ce qui)|qu'est-ce que je fais (la|ici)|ou suis-je|je comprends rien|je comprends pas|desoriente)/],
+  ["aide", /(m'aider|aidez-moi|aide-moi|aidez moi|aide moi|tu peux m'aider|pouvez-vous m'aider|j'ai besoin d'aide|besoin d'aide)/],
   ["cle", /(la cle|le cadenas|ouvre le portail|ouvrir le portail|t'as la cle|tu as la cle)/],
   ["sortir", /(sortir|partir d'ici|s'echapper|aide-nous|aide moi|aide-moi|au secours|police|gendarmes|rentrer chez moi)/],
   ["objets", /(qui (lance|jette|envoie)|par-dessus la cloture|tombe du ciel|ces objets)/],
@@ -10402,6 +10458,8 @@ function lenaReply(c, text) {
     case "nom": out = c.knows.pantin ? pick(c.id, "nom2", [`Je te l'ai dit : ${p.name}.`, `${p.name}. Tu as déjà oublié ?`]) : `Je m'appelle ${p.name}.`; expr = "sourire"; if (!p.knowsName?.[c.id]) ask = "nom"; break;
     case "qui": out = fill(B.qui); if (!(p.knowsOrigin || {})[c.id] && Math.random() < .5) ask = "origine"; break;
     case "ou": out = pick(c.id, "ou", ["Dans un jardin, juste à la sortie de Saint-Aubin-du-Val. Le village est au bout de la route, à l'ouest.", "À Saint-Aubin-du-Val. Enfin, juste à côté : le village est là-bas, derrière les arbres, tu vois le clocher ?"]); break;
+    case "perdu": { const need = c.water < 50 ? "Commence par boire un peu : il y a un robinet dans la maison, l'eau est bonne." : c.food < 50 ? "Commence par manger quelque chose : il y a des fruits sur l'arbre." : c.energy < 40 ? "Tu tiens à peine debout. Il y a un lit dans la maison, va t'allonger un peu." : "Une chose à la fois. Regarde autour de toi : la maison, l'arbre, la rivière. Tu as tout ce qu'il faut ici, pour l'instant."; out = call + pick(c.id, "perdu", ["Respire. Tu es dans un jardin, juste à côté de Saint-Aubin-du-Val. Tu n'es pas en danger.", "Je sais. Ça va aller, je te le promets.", "Doucement. Tu es en sécurité ici."]) + " " + need; expr = "sourire"; if (c.water < 50) c.toldRobinet = true; } break;
+    case "aide": out = call + pick(c.id, "aide", ["Oui. Je suis là pour ça.", "Bien sûr. Dis-moi ce qu'il te faut.", "Je vais t'aider, autant que je peux."]) + " " + (c.water < 50 ? "D'abord, bois : il y a un robinet dans la maison." : c.food < 50 ? "D'abord, mange : il y a des fruits sur l'arbre." : "De quoi as-tu besoin, là, maintenant ?"); expr = "sourire"; break;
     case "pourquoi": out = fill(B.pourquoi); expr = "inquiete"; break;
     case "cle": out = fill(B.cle); gesture = "non"; break;
     case "sortir": out = fill(B.sortir); expr = "inquiete"; break;
@@ -10421,8 +10479,8 @@ function lenaReply(c, text) {
     case "colere": out = pick(c.id, "colere", ["D'accord. Je m'éloigne.", "Je ne suis pas ton ennemie.", "Calme-toi. Je ne te ferai rien."]); expr = "triste"; gesture = "reculer"; break;
     case "oui": out = pick(c.id, "oui", ["Bien.", "Alors on est d'accord.", "D'accord."]); break;
     case "non": out = pick(c.id, "non", ["Comme tu veux.", "Je comprends.", "Tant pis."]); break;
-    case "question": out = pick(c.id, "q", ["Je ne sais pas.", "Bonne question… je ne sais pas.", "Ça, je ne peux pas te le dire."]); gesture = "epaules"; break;
-    default: out = pick(c.id, "propos", ["Hm.", "Je vois.", "Je t'écoute.", "Continue."]); gesture = Math.random() < .5 ? "hocher" : null;
+    case "question": out = pick(c.id, "q", ["Je ne peux pas tout t'expliquer maintenant. Mais tu n'es pas en danger ici.", "Ça, je ne peux pas te le dire. Pas encore.", "Je ne sais pas tout. Je sais seulement que tu es en sécurité, ici."]); gesture = "epaules"; break;
+    default: out = pick(c.id, "propos", ["Je vois.", "Je t'écoute.", "Continue, je suis là.", "D'accord."]); gesture = Math.random() < .5 ? "hocher" : null;
   }
   // même question qu'avant : même réponse (la bible ne varie pas), dite comme une redite
   cv.answered = cv.answered || {};
@@ -10753,6 +10811,12 @@ function autoCamEvent(e) {
   const sel = document.getElementById("aiFrame"); if (!sel) return;
   sel.value = AI.settings?.frame || "auto";
   sel.onchange = () => { AI.settings.frame = sel.value; saveAISettings(); if (["claude", "anthropic"].includes(AI.provider) && sel.value === "off") setStatus("Attention : sans cadre de fiction, Claude refuse d'incarner Théo et Clémence. Le traducteur de secours prendra le relais, mais ils seront beaucoup moins vivants.", true); };
+})();
+
+(function profilePanel() {
+  const sel = document.getElementById("aiProfile"); if (!sel) return;
+  sel.value = AI.settings?.profile || "auto";
+  sel.onchange = () => { AI.settings.profile = sel.value; saveAISettings(); };
 })();
 
 </script>
