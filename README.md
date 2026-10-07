@@ -2,7 +2,7 @@
 
 Jeu de plateforme 3D pour enfants : un petit robot explore des îles flottantes, ramasse des anneaux, aide les habitants, prépare des gâteaux et s'occupe de son animal.
 
-**Version 8.1**
+**Version 8.2**
 
 ## Jouer
 
@@ -34,6 +34,13 @@ Ouvre `index.html` dans un navigateur récent. Tout le jeu tient dans ce seul fi
 ## Sauvegarde
 
 Sur GitHub Pages (ou en ouvrant le fichier directement), la partie est enregistrée dans le navigateur de l'appareil. La sauvegarde en ligne entre appareils ne fonctionne que dans la version publiée comme artefact Claude.
+
+## Nouveautés de la 8.2 — iPhone et iPad
+
+- Le jeu a été vérifié sur des écrans d'iPhone (13, SE, en portrait et en paysage) et d'iPad (en portrait).
+- L'entrée et la sortie de l'Observatoire ne figent plus le jeu : la pièce n'ajoute plus de lampe, qui obligeait Safari à recalculer tout l'éclairage.
+- Sur les petits écrans (iPhone SE), le nom de l'île ne chevauche plus le compteur d'anneaux, et l'astuce de caméra ne gêne plus le joystick.
+- L'astuce de caméra devient « Glisser pour regarder ».
 
 ## Nouveautés de la 8.1
 
