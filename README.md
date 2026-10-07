@@ -2,7 +2,7 @@
 
 Jeu de plateforme 3D pour enfants : un petit robot explore des îles flottantes, ramasse des anneaux, aide les habitants, prépare des gâteaux et s'occupe de son animal.
 
-**Version 7.8**
+**Version 7.9**
 
 ## Jouer
 
@@ -25,12 +25,20 @@ Ouvre `index.html` dans un navigateur récent. Tout le jeu tient dans ce seul fi
 | Tourner la caméra | J / L ou glisser la souris | Glisser à droite | Stick droit (gauche/droite) |
 | Incliner la caméra | U / O ou glisser la souris vers le haut/bas | Glisser à droite vers le haut/bas | Stick droit (haut/bas) |
 | Recentrer la caméra | K | Double-tap à droite | Clic du stick droit |
+| Recentrage automatique | Se fait seul en marchant · réglable dans Pause ou sur l’écran titre (« Caméra auto ») | idem | idem |
 | Sac | B ou I | Bouton sac | — |
 | Pause | Échap ou P | Bouton pause | Start |
 
 ## Sauvegarde
 
 Sur GitHub Pages (ou en ouvrant le fichier directement), la partie est enregistrée dans le navigateur de l'appareil. La sauvegarde en ligne entre appareils ne fonctionne que dans la version publiée comme artefact Claude.
+
+## Nouveautés de la 7.9
+
+- Recentrage automatique de la caméra : quand le robot avance et qu'on ne touche pas à la caméra pendant un instant, elle revient doucement se placer derrière lui et retrouve sa hauteur normale.
+- Elle ne fait jamais de demi-tour brusque quand le robot revient vers la caméra, et tourne lentement quand il marche de côté.
+- Dès qu'on manipule la caméra (souris, doigt, J/L/U/O, stick droit), le recentrage se met en pause.
+- Option « Caméra auto » sur l'écran titre et « Recentrage auto : oui / non » dans le menu Pause (le choix est mémorisé).
 
 ## Nouveautés de la 7.8
 
