@@ -19,7 +19,7 @@ Le jeu fonctionne directement dans un navigateur récent (ordinateur, tablette o
 
 ## Version
 
-Version actuelle : **7.5**
+Version actuelle : **7.7**
 
 ## Crédits
 
