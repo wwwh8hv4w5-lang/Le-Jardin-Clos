@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Prairie Orbitale 7.9</title>
+<title>Prairie Orbitale 8.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
@@ -473,6 +473,23 @@ kbd{font-family:var(--body);font-weight:800;font-size:12px;min-width:22px;text-a
 .fun-row .btn{min-width:0}
 #funGo{font-size:22px;padding:14px 30px}
 .home-fade{position:fixed;inset:0;z-index:30;background:#0b0a12;opacity:0;pointer-events:none}
+/* ---------- Le télescope de l'Observatoire ---------- */
+.home-fade{z-index:50}
+.tele{position:fixed;inset:0;z-index:45;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
+.tele:active{cursor:grabbing}
+body.tele-on .v-bubble,body.tele-on #actBtn,body.tele-on #caption,body.tele-on .pop,body.tele-on .quest-mark,body.tele-on .pet-feed{display:none!important}
+.tele-vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 48%,transparent 0,transparent min(41vw,41vh),rgba(0,0,0,.9) calc(min(41vw,41vh) + 3px),#000 100%)}
+.tele-ring{position:absolute;left:50%;top:48%;width:calc(min(82vw,82vh) + 8px);height:calc(min(82vw,82vh) + 8px);transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 0 0 6px #2a3c8f,0 0 0 9px #ffd23f,inset 0 0 40px rgba(0,0,0,.65);pointer-events:none}
+.tele-top{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;justify-content:center;pointer-events:none}
+.tele-chip{font-family:var(--display);font-size:18px;letter-spacing:.04em;color:#fff;background:rgba(16,26,66,.8);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:7px 16px}
+.tele-chip b{font-weight:400;color:var(--gold);font-variant-numeric:tabular-nums}
+.tele-chip b.low{color:var(--coral)}
+.tele-label{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 86px);transform:translateX(-50%);margin:0;max-width:calc(100vw - 32px);text-align:center;font-family:var(--display);font-size:clamp(17px,4.4vw,22px);color:#fff;text-shadow:0 2px 8px #000;opacity:0;transition:opacity .3s;pointer-events:none}
+.tele-label.on{opacity:1}
+.tele-hint{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 58px);transform:translateX(-50%);margin:0;font-weight:800;font-size:14px;color:var(--soft);text-shadow:0 1px 4px #000;white-space:nowrap;pointer-events:none}
+.tele-bub{position:absolute;transform:translate(-50%,-100%);padding:8px 14px;border-radius:16px;background:#fffdf6;color:#2a2340;font-family:var(--display);font-size:20px;box-shadow:0 6px 18px rgba(0,0,0,.4);pointer-events:none;animation:bump .6s ease-in-out infinite}
+.tele-bub::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-bottom:0;border-top-color:#fffdf6}
+.tele-quit{position:absolute;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);font-size:16px;padding:9px 20px;background:rgba(16,26,66,.7)}
 .lila-bubble{background:#fff0f7}
 .lila-bubble::after{border-top-color:#fff0f7}
 .lila-bubble b{color:#d94a7a}
@@ -575,6 +592,14 @@ kbd{font-family:var(--body);font-weight:800;font-size:12px;min-width:22px;text-a
 <div id="funChip" class="fun-chip" hidden><span id="funTxt"></span><button id="funQuit" aria-label="Arrêter">✕</button></div>
 <div id="funPanel" class="fun-panel" hidden><p id="funMsg"></p><div class="fun-row"><button id="funGo" class="btn">Lancer</button><button id="funStop" class="btn ghost small">Arrêter</button></div></div>
 <div id="homeFade" class="home-fade" hidden></div>
+<div id="tele" class="tele" hidden>
+  <div class="tele-vig"></div><div class="tele-ring"></div>
+  <div class="tele-top"><span class="tele-chip">Télescope · <b id="teleTime">0:30</b></span></div>
+  <div class="tele-bub" id="teleBub" hidden>Coucou ! 👋</div>
+  <p class="tele-hint" id="teleHint">Glisse pour déplacer le télescope</p>
+  <p class="tele-label" id="teleLabel"></p>
+  <button class="btn ghost tele-quit" id="teleQuit">Quitter</button>
+</div>
 <button id="petFeed" class="pet-feed" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="15.5" rx="5" ry="4.2" fill="currentColor"/><ellipse cx="5.5" cy="10" rx="2" ry="2.6" fill="currentColor"/><ellipse cx="9.5" cy="6" rx="2" ry="2.6" fill="currentColor"/><ellipse cx="14.5" cy="6" rx="2" ry="2.6" fill="currentColor"/><ellipse cx="18.5" cy="10" rx="2" ry="2.6" fill="currentColor"/></svg><span>Donner à manger</span></button>
 <button id="giveBtn" class="shop-btn cake-btn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="12" width="18" height="8" rx="2" fill="currentColor"/><path d="M3 13 q3 3 6 0 q3 3 6 0 q3 3 6 0 V11 H3 Z" fill="#fff"/><rect x="11" y="5" width="2" height="6" fill="currentColor"/><path d="M12 1 q2 2 0 3.5 q-2-1.5 0-3.5" fill="#ff5d73"/></svg><span>Offrir un gâteau</span></button>
 <button id="shopBtn" class="shop-btn" hidden><span class="ring-ico"></span>Boutique</button>
@@ -590,7 +615,7 @@ kbd{font-family:var(--body);font-weight:800;font-size:12px;min-width:22px;text-a
     <p class="t-studio"><img class="fsm-logo" alt="">F.S.M Game House présente</p>
     <p class="t-pre">Une aventure de petit robot</p>
     <h1 class="title">Prairie<br><span>Orbitale</span></h1>
-    <p class="t-ver" id="tVer">Version 7.9</p>
+    <p class="t-ver" id="tVer">Version 8.1</p>
     <p class="t-cta" id="tCta">Touchez pour jouer</p>
   </div>
   <button id="tSkip" class="t-skip">Passer</button>
@@ -609,8 +634,17 @@ kbd{font-family:var(--body);font-weight:800;font-size:12px;min-width:22px;text-a
 <script>
 (() => {
 'use strict';
+/* three.js r128 : les matériaux Lambert n'ont pas d'option flatShading (elle était ignorée et remplissait
+   la console d'avertissements). On la retire avant de créer le matériau : aucun changement visuel. */
+{
+  const Lambert = THREE.MeshLambertMaterial;
+  class LambertQuiet extends Lambert {
+    constructor(p) { if (p && 'flatShading' in p) { p = Object.assign({}, p); delete p.flatShading; } super(p); }
+  }
+  try { THREE.MeshLambertMaterial = LambertQuiet; } catch (_) {}
+}
 const $ = id => document.getElementById(id);
-const GAME_VERSION = '7.9';
+const GAME_VERSION = '8.1';
 const FSM_LOGO = 'data:image/png;base64,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';
 document.querySelectorAll('.fsm-logo').forEach(i => i.src = FSM_LOGO);
 document.title = 'Prairie Orbitale ' + GAME_VERSION; $('tVer').textContent = 'Version ' + GAME_VERSION;
@@ -1325,47 +1359,118 @@ const LEVELS = [
     L.bot(-21, 0.35, -103);
     L.goal(3.5, 0.35, -122);
   } },
-  { theme: 1, fence: true, openings: [{ x: 0, z: -34, r: 2.05 }, { x: 0, z: -37, r: 2.05 }, { x: 0, z: -78, r: 2.05 }, { x: 0, z: -81, r: 2.05 }],
-    tip: 'Deux petits ponts de bois relient les îles : traverse-les sans crainte, ils ont des barrières !', build(L) {
-    // île du village
+  { theme: 1, fence: true, openings: [{ x: 0, z: -34, r: 2.05 }, { x: 0, z: -37.6, r: 2.05 }, { x: 0, z: -75, r: 2.05 }, { x: 0, z: -83, r: 2.05 }, { x: 17, z: -104, r: 2.2 }, { x: 26.1, z: -104, r: 2.2 }],
+    tip: 'Les tourbillons de vent t’emportent dans le ciel et les nuages roses te font rebondir : vole d’île en île !', build(L) {
+    /* ===== Îles Flottantes : un archipel à explorer, des tourbillons de vent, des nuages rebondissants ===== */
+    const lobe = { noLamps: true, grassMul: 0.7 };
+    /* --- 1. L'île du village (le départ) et ses avancées arrondies --- */
     L.box(0, 16, -34, 36, 0);
+    L.cyl(-19.5, 8, 6, 0, lobe); L.cyl(19, 11, 6, 0, lobe); L.cyl(-19, -26, 7.5, 0, lobe);
     L.house(-12, 0, 6, Math.PI / 2, 1); L.house(12, 0, 2, -Math.PI / 2, 2); L.house(-12, 0, -20, Math.PI / 2, 3);
     L.shop(12, 0, -19, -Math.PI / 2);
     L.petshop(-13.7, 0, -7, Math.PI / 2);
     L.gare(11.5, 0, -9, -Math.PI / 2);
-    L.path(0, 15.5, 0, -33.8, 2.8, 0); L.path(0, -37.2, 0, -77.8, 2.8, 0.35); L.path(0, -81.2, 0, -112, 2.8, 0.35);
+    L.path(0, 15.5, 0, -33.8, 2.8, 0);
     L.path(-9.8, 6, -1.4, 6, 1.6, 0); L.path(1.4, 2, 9.8, 2, 1.6, 0); L.path(-11.2, -7, -1.4, -7, 1.6, 0); L.path(1.4, -9, 9.2, -9, 1.6, 0);
     L.path(-9.8, -20, -1.4, -20, 1.6, 0); L.path(1.4, -19, 10.6, -19, 1.6, 0);
-    L.path(-6.8, -48, -1.4, -48, 1.6, 0.35); L.path(1.4, -66, 6.8, -66, 1.6, 0.35); L.path(-7.8, -96, -1.4, -96, 1.6, 0.35); L.path(1.4, -104, 7.8, -104, 1.6, 0.35);
+    L.path(-1.4, -27.5, -17, -27.5, 1.8, 0);                                           // le sentier du tourbillon
     L.villager('Margot', 2, -5, 0, 8, -5, -10);
     L.villager('Gaston', 3, 5, 0, -27, -6, -27);
-    // saut n°1, puis l'île des jardins
-    L.box(0, -37, -78, 28, 0.35);
-    L.cyl(-16.5, -60, 3.4, 0.35);
-    L.house(-9, 0.35, -48, Math.PI / 2, 0); L.house(9, 0.35, -66, -Math.PI / 2, 4);
-    L.villager('Noé', 1, 4, 0.35, -42, 8, -54);
-    L.villager('Rosa', 4, -6, 0.35, -72, 4, -72);
-    L.quest('Noé', { wps: [{ x: 1.5, z: -42.6 }, { x: -8.6, z: -41.4 }], prop: ['telescope', -11.2, -40.6],
-      call: 'Psst ! Petit robot ! Suis-moi, je vais te montrer mon trésor !', show: 'C’est mon télescope ! La nuit, je regarde les étoiles et les autres îles. Regarde comme ça brille !',
-      thanks: 'Tiens, pour ton voyage ! Et des croquettes pour un futur compagnon !', gift: { rings: 12, food: { croq: 2, eau: 2 } } });
     L.quest('Margot', { wps: [{ x: -5, z: 11.6 }, { x: -7.2, z: 12 }], prop: ['pumpkin', -9.6, 12.6],
       call: 'Oh, un visiteur ! Viens vite, suis-moi, c’est une surprise !', show: 'Ta-da ! Ma citrouille géante ! Elle a gagné le concours des Îles Flottantes !',
       thanks: 'Merci pour tes applaudissements ! Voilà des anneaux !', gift: { rings: 18 } });
-    // saut n°2, puis l'île de la grande porte
-    L.box(0, -81, -116, 30, 0.35);
-    L.house(-10, 0.35, -96, Math.PI / 2, 2); L.house(10, 0.35, -104, -Math.PI / 2, 1);
-    L.villager('Félix', 0, -4, 0.35, -88, 4, -88);
-    // îles mobiles décoratives, au loin
-    L.box(21, -14, -18, 4, 1, { move: { axis: 'y', amp: 1.2, speed: 1.1 } });
-    L.box(-23, -92, -96, 4, 1.5, { move: { axis: 'x', amp: 2, speed: 0.9 } });
-    L.bridge(0, -33.6, -37.4, 4, 0.04, 0.33); L.bridge(0, -77.6, -81.4, 4, 0.4, 0.4);
-    L.ringLine(0, 1, 10, 0, 1, -28, 8); L.ringLine(0, 1.1, -32, 0, 1.4, -39, 4);
-    L.ringLine(0, 1.35, -45, 0, 1.35, -73, 7); L.ringLine(0, 1.45, -76, 0, 1.45, -83, 4);
-    L.ringCircle(0, 1.35, -97, 4, 8);
-    L.enemy(-6, -58, 6, -58, 0.35, { speed: 0.8 }); L.enemy(-5, -100, 5, -100, 0.35, { type: 'hop' });
-    L.enemy(11, -88, 11, -88, 0.35, { type: 'shoot' });
-    L.bot(-17.6, 0.35, -61);
-    L.goal(0, 0.35, -109);
+    L.quest('Gaston', { wps: [{ x: -7, z: -26.4 }, { x: -13.4, z: -26.2 }], prop: ['chimes', -15.4, -29.6],
+      call: 'Hé, petit robot ! Tu entends ce joli bruit ? Viens voir, suis-moi !', show: 'Mon carillon à vent ! Quand le tourbillon souffle, il chante tout seul. Écoute !',
+      thanks: 'Merci de l’avoir écouté avec moi ! Voilà des anneaux, et des friandises pour ton compagnon !', gift: { rings: 15, food: { friand: 2 } } });
+    // les avancées : un banc fleuri à l'ouest, un petit verger à l'est, le tourbillon au sud-ouest
+    L.bench(-21.5, 0, 9.5, Math.PI / 2); L.flowerBed(-20.5, 0, 5, 1.6, 2.6);
+    L.tree(-23, 12.2, 1.1); L.tree(-23.5, 5, 0.95); L.tree(21.5, 14, 1.15); L.tree(23, 9, 1.0); L.tree(19.5, 15.6, 0.9);
+    L.flowerBed(20, 0, 8.5, 1.4, 2.4);
+    L.updraft(-21.5, -27.5, 0, 10);
+    L.windsock(-24.6, 0, -23.4, 2.3);
+    L.landmark(-20, -27.5, 5.5, 'lm-draft1', [['excited', 'Tu vois ce tourbillon qui brille ? C’est un courant d’air !'], ['warm', 'Marche dedans : il t’emporte tout là-haut. Ensuite, avance vers la petite île dans le ciel.']]);
+    /* --- 2. L'îlot du petit robot, dans le ciel (on y monte par le tourbillon) --- */
+    L.cyl(-31, -41.5, 4.6, 6.5, { noLamps: true });
+    L.bot(-32.2, 6.5, -43.2);
+    L.tree(-33.6, -39.8, 0.9, 6.5); L.tree(-28.4, -44.4, 0.8, 6.5);
+    L.updraft(-29.04, -38.97, 6.5, 4.5, { r: 1.1, color: 0xffd6ec });
+    L.landmark(-31, -41.5, 4.6, 'lm-sky1', [['warm', 'Pour redescendre au village, entre dans le petit tourbillon rose : le vent te ramène.']]);
+    L.ringLine(-22.8, 10.4, -30, -28.2, 8.0, -38.4, 5); L.ringCircle(-31, 7.6, -41.5, 2.5, 6);
+    /* --- 3. Le pont des jardins, puis l'île des Jardins Suspendus --- */
+    L.bridge(0, -33.6, -38.1, 4, 0.04, 0.33);
+    L.cyl(0, -50, 12.5, 0.35, { noLamps: true, grassMul: 0.85 });
+    L.cyl(-10.5, -63, 9, 0.35, lobe); L.cyl(11, -63.5, 8, 0.35, lobe); L.cyl(0, -68.5, 6.5, 0.35, lobe);
+    L.path(0, -37.9, 0, -74.6, 2.8, 0.35);
+    L.house(-7.5, 0.35, -45, Math.PI / 2, 0); L.path(-5.6, -45, -1.4, -45, 1.6, 0.35);
+    L.house(7, 0.35, -46, -Math.PI / 2, 4); L.path(1.4, -46, 5.1, -46, 1.6, 0.35);
+    L.flowerArch(0, 0.35, -40.5, 0); L.flowerArch(0, 0.35, -71.5, 0);
+    L.flowerBed(-4.5, 0.35, -51, 1.6, 3.2); L.flowerBed(4.5, 0.35, -51, 1.6, 3.2);
+    L.bench(2.6, 0.35, -58.5, -Math.PI / 2); L.bench(-2.6, 0.35, -62, Math.PI / 2);
+    L.tree(-9.8, -53.5, 1.1, 0.35); L.tree(9.5, -54, 1.0, 0.35); L.tree(-5.5, -40.5, 0.9, 0.35); L.tree(6.2, -40.2, 0.95, 0.35);
+    L.tree(14.5, -60.5, 1.05, 0.35); L.tree(5.5, -71, 0.9, 0.35); L.tree(-5.5, -71.5, 0.95, 0.35);
+    [[1.9, -43], [-1.9, -55], [1.9, -67]].forEach(([lx, lz]) => L.lamp(lx, lz, 0.35));
+    L.villager('Noé', 1, 3, 0.35, -53, 7, -56);
+    L.quest('Noé', { wps: [{ x: -2, z: -55 }, { x: -5.2, z: -58.4 }], prop: ['telescope', -7, -60.5],
+      call: 'Psst ! Petit robot ! Suis-moi, je vais te montrer mon trésor !', show: 'C’est mon télescope ! La nuit, je regarde les étoiles et les autres îles. Regarde comme ça brille !',
+      thanks: 'Tiens, pour ton voyage ! Et des croquettes pour un futur compagnon !', gift: { rings: 12, food: { croq: 2, eau: 2 } } });
+    // la cascade qui tombe dans le vide, son arc-en-ciel et sa source
+    L.river([[-8.6, -66.6], [-12.4, -66.1], [-16, -64.7], [-19.8, -63.6]], 2.0, { top: 0.35, falls: [1] });
+    L.spring(-8.2, 0.35, -66.8);
+    L.rainbow(-24, -4.5, -63.6, Math.PI / 2, 7.5);
+    L.landmark(-15, -62.5, 5, 'lm-falls', [['excited', 'Écoute… une cascade qui tombe dans le vide !'], ['calm', 'Et regarde, il y a un arc-en-ciel au-dessus.']]);
+    L.villager('Rosa', 4, -14, 0.35, -59.5, -8.5, -58);
+    L.quest('Rosa', { wps: [{ x: -11, z: -58.4 }, { x: -14.4, z: -58.2 }], prop: ['nest', -16.8, -60.2],
+      call: 'Coucou ! Viens vite, mais tout doucement… Suis-moi !', show: 'Mes petits oisillons ! Aujourd’hui, ils font leur tout premier vol. Regarde !',
+      thanks: 'Ils volent, ils volent ! Merci d’être venu les encourager. Voilà pour toi !', gift: { rings: 15, food: { croq: 1, friand: 1 } } });
+    L.enemy(-4.5, -48.5, 4.5, -48.5, 0.35, { speed: 0.8 });
+    /* --- 4. Le tourbillon de l'Observatoire et l'île de l'Observatoire des Nuages --- */
+    L.updraft(14.5, -66, 0.35, 10.5);
+    L.landmark(14.5, -66, 5, 'lm-draft2', [['warm', 'Encore un tourbillon ! Celui-là t’emmène jusqu’à l’Observatoire, tout là-haut.']]);
+    L.cyl(31, -48, 7.5, 4.2, { noLamps: true });
+    L.observatory(32, 4.2, -47, -2.23);
+    L.span(25.55, -52.23, 16.3, -59.4, 2.4, 4.2, 0.35);
+    L.windsock(34.6, 4.2, -53, 2.3);
+    L.villager('Stella', 9, 26.6, 4.2, -45, 27.2, -50.5, { lines: ['Bienvenue à l’Observatoire des Nuages ! D’ici, on voit toutes les îles.', 'Le vent des tourbillons est tout doux : il porte les robots sans jamais les faire tomber.', 'La nuit, ma grande lunette regarde les étoiles filantes.', 'Tu as vu le petit phare, là-bas ? Il guide les ballons perdus.'] });
+    L.chest(28, 4.2, -42.3, 20, 'Le trésor de l’Observatoire !', Math.PI / 2);
+    L.ringLine(16.5, 10.6, -63.6, 24, 8.4, -55.2, 5); L.ringCircle(32, 5.3, -47, 4.6, 8);
+    L.landmark(31, -48, 7, 'lm-obs', [['excited', 'L’Observatoire des Nuages ! Quelle vue !'], ['calm', 'Pour redescendre, prends la passerelle de bois : elle te ramène aux jardins.']]);
+    /* --- 5. Les nuages rebondissants : un raccourci par le ciel jusqu'à l'île de la grande porte --- */
+    L.cloudPad(-15.5, -69.2, 0.35);
+    L.landmark(-15.5, -69.2, 4.5, 'lm-pad', [['excited', 'Un nuage rose tout moelleux ! Monte dessus pour rebondir.'], ['warm', 'Dans les airs, dirige-toi vers la petite île là-bas.']]);
+    L.cyl(-25, -80, 4.4, 3.2, { noLamps: true });
+    L.cloudPad(-23.6, -82.2, 3.2);
+    L.chest(-26.6, 3.2, -78.6, 15, 'Un trésor caché dans les nuages !', 0.6);
+    L.tree(-27.4, -82.2, 0.85, 3.2);
+    L.ringArc(-16.5, 2.2, -71.2, -23, 5.2, -77.6, 5, 2.2); L.ringCircle(-25, 4.3, -80, 2.6, 5);
+    /* --- 6. Le pont de la grande porte, puis l'île de la grande porte --- */
+    L.bridge(0, -74.6, -83.4, 4, 0.38, 0.38);
+    L.cyl(0, -96, 13, 0.35, { noLamps: true, grassMul: 0.85 });
+    L.cyl(-12.5, -102, 7, 0.35, lobe); L.cyl(11, -104, 6, 0.35, lobe);
+    L.path(0, -83.2, 0, -102.5, 2.8, 0.35);
+    L.house(-7, 0.35, -90, Math.PI / 2, 2); L.path(-5.1, -90, -1.4, -90, 1.6, 0.35);
+    L.house(7.5, 0.35, -92, -Math.PI / 2, 1); L.path(1.4, -92, 5.6, -92, 1.6, 0.35);
+    L.tree(-15, -98, 1.1, 0.35); L.tree(-16.5, -105, 0.95, 0.35); L.tree(-9, -106.5, 0.9, 0.35); L.tree(9.5, -108, 0.95, 0.35); L.tree(-11, -93, 0.85, 0.35);
+    [[-1.9, -87], [1.9, -98]].forEach(([lx, lz]) => L.lamp(lx, lz, 0.35));
+    L.bench(-2.6, 0.35, -95, Math.PI / 2);
+    L.villager('Félix', 0, -4, 0.35, -86.5, 4, -86.5);
+    L.quest('Félix', { wps: [{ x: 3, z: -95 }, { x: 7.4, z: -99.6 }], prop: ['balloon', 9.6, -101.6],
+      call: 'Ohé, petit robot ! J’ai construit quelque chose d’incroyable. Suis-moi !', show: 'Ma montgolfière miniature ! Regarde-la monter dans le ciel des îles !',
+      thanks: 'Elle vole ! Un jour, je ferai le tour de toutes les îles avec. Tiens, c’est pour toi !', gift: { rings: 20 } });
+    L.enemy(-5, -100, 5, -100, 0.35, { type: 'hop' });
+    L.enemy(8, -86, 8, -86, 0.35, { type: 'shoot' });
+    L.ringLine(0, 1.1, -32, 0, 1.4, -39, 4); L.ringLine(0, 1, 10, 0, 1, -28, 8);
+    L.ringLine(0, 1.35, -43, 0, 1.35, -69, 7); L.ringLine(0, 1.45, -75.5, 0, 1.45, -82.5, 4);
+    L.ringCircle(0, 1.35, -96, 4, 8);
+    /* --- 7. La plateforme qui fait la navette jusqu'au phare des nuages --- */
+    L.box(21.75, -102.5, -105.5, 3, 0.35, { move: { axis: 'x', amp: 3.6, speed: 0.55 } });
+    L.cyl(29.5, -104, 3.4, 0.35, { noLamps: true });
+    L.lighthouse(30.9, 0.35, -104.6);
+    L.landmark(15.5, -104, 3.5, 'lm-ferry', [['calm', 'Une plateforme qui fait la navette ! Attends qu’elle arrive tout près, puis monte dessus.']]);
+    L.landmark(29.5, -104, 3.4, 'lm-phare', [['excited', 'Le petit phare des nuages ! Sa lumière guide les ballons perdus.']]);
+    L.ringLine(18.5, 1.5, -104, 25, 1.5, -104, 4); L.ringLine(28.2, 1.35, -102, 28.2, 1.35, -106, 3);
+    L.goal(0, 0.35, -104.5);
+    L.birds(0, -60, 6, 16, 26); L.birds(20, -95, 4, 13, 14);
+    L.smoke();
   } },
   { theme: 2, train: true, wide: true, townFence: [{ x: 0, z: -64, r: 3.2 }],
     tip: 'Promène-toi dans le Bourg, salue le Maire, puis saute et plane jusqu’à la grande porte !', build(L) {
@@ -1491,8 +1596,8 @@ function buildLevel(i) {
   const group = new THREE.Group(); scene.add(group);
   const statics = new THREE.Group(); group.add(statics); // décor fixe, fusionné à la fin
   L = { group, index: i, plats: [], rings: [], enemies: [], shots: [], lamps: [], solids: [], fences: [], villagers: [], houses: [], shop: null, bot: null, botSaved: false, goal: null, butterflies: [], clouds: [], islands: [], motes: null, ringsTaken: 0, stomps: 0, t: 0, killY: 0,
-    roads: [], plazas: [], noGrass: [], tickers: [], landmarks: [], grassLod: [] };
-  quest.v = null; quest.phase = ''; questCoolT = 0; if (typeof lila !== 'undefined') lila.reset(); if (typeof world !== 'undefined') world.reset(); { const qc = document.getElementById('questChip'); if (qc) qc.hidden = true; }
+    roads: [], plazas: [], noGrass: [], tickers: [], landmarks: [], grassLod: [], drafts: [], extraOpenings: [] };
+  quest.v = null; quest.phase = ''; questCoolT = 0; if (typeof lila !== 'undefined') lila.reset(); if (typeof world !== 'undefined') world.reset(); if (typeof obs !== 'undefined') obs.reset(); { const qc = document.getElementById('questChip'); if (qc) qc.hidden = true; }
   const mats = {
     top: new THREE.MeshLambertMaterial({ color: th.top }),
     side: new THREE.MeshLambertMaterial({ color: th.side, flatShading: true }),
@@ -1580,8 +1685,13 @@ function buildLevel(i) {
     const grp = new THREE.Group(); grp.position.set(p.x, p.top, p.z); group.add(grp);
     p.group = grp; p.dx = p.dy = p.dz = 0;
     if (opt && opt.move) { p.move = Object.assign({ phase: 0 }, opt.move); p.bx = p.x; p.by = p.top; p.bz = p.z; }
-    if (opt) { if (opt.town) p.town = true; if (opt.grassMul) p.grassMul = opt.grassMul; if (opt.noLamps) p.noLamps = true; if (opt.noDeco) p.noDeco = true; }
-    if (opt && opt.bare) {
+    if (opt) { if (opt.town) p.town = true; if (opt.grassMul) p.grassMul = opt.grassMul; if (opt.noLamps) p.noLamps = true; if (opt.noDeco) p.noDeco = true; if (opt.noFence) p.noFence = true; if (opt.bounce) p.bounce = opt.bounce; }
+    if (opt && opt.ghost) {
+      // surface de marche invisible (passerelles en diagonale, nuages rebondissants) : le décor est dessiné à part
+      p.bare = true; p.ghost = true;
+      if (p.kind === 'box') L.noGrass.push({ x0: p.x - p.w / 2, x1: p.x + p.w / 2, z0: p.z - p.d / 2, z1: p.z + p.d / 2 });
+      else L.plazas.push({ x: p.x, z: p.z, r: p.r, hidden: true });
+    } else if (opt && opt.bare) {
       // marche, perron, estrade : un simple bloc de pierre, sans herbe ni île en dessous
       p.bare = true; const h = Math.max(0.1, p.top - (opt.base || 0));
       const geo = p.kind === 'box' ? new THREE.BoxGeometry(p.w, h, p.d) : new THREE.CylinderGeometry(p.r, p.r, h, 24);
@@ -1690,6 +1800,170 @@ function buildLevel(i) {
       L.shop = { pos: v.pos, front };
       L.houses.push({ x, z, r: 2.6 });
     },
+    /* ===================== Îles Flottantes : vent, nuages, passerelles ===================== */
+    /* tourbillon de vent : marche dedans, il t'emporte jusqu'à la hauteur y + h */
+    updraft(x, z, y, h, o = {}) {
+      const r = o.r || 1.5, d = { x, z, r, y0: y, y1: y + h, lift: o.lift || 8.5 };
+      L.drafts.push(d);
+      // socle : anneau de pierre, grille sombre et spirale lumineuse
+      const base = grp(x, y, z, 0);
+      const rim = M3(new THREE.TorusGeometry(r + 0.15, 0.22, 8, 36), townMats.stoneDark, 0, 0.12, 0, base); rim.rotation.x = Math.PI / 2;
+      M3(new THREE.CircleGeometry(r + 0.05, 32).rotateX(-Math.PI / 2), lam(0x2a2f5a), 0, 0.06, 0, base);
+      for (let k = 0; k < 6; k++) { const b = B(base, 0.08, 0.05, r * 2, townMats.metal, 0, 0.09, 0); b.rotation.y = k / 6 * Math.PI; }
+      L.noGrass.push({ x0: x - r - 0.4, x1: x + r + 0.4, z0: z - r - 0.4, z1: z + r + 0.4 });
+      // colonne d'air transparente qui défile vers le haut
+      const c = document.createElement('canvas'); c.width = 64; c.height = 256; const cx = c.getContext('2d');
+      cx.clearRect(0, 0, 64, 256);
+      for (let k = 0; k < 26; k++) { const gx = Math.random() * 64, gy = Math.random() * 256, gl = 30 + Math.random() * 70; const gr = cx.createLinearGradient(0, gy, 0, gy + gl); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,' + (0.35 + Math.random() * 0.5) + ')'); gr.addColorStop(1, 'rgba(255,255,255,0)'); cx.fillStyle = gr; cx.fillRect(gx, gy, 2 + Math.random() * 3, gl); cx.fillRect(gx, gy - 256, 2, gl); }
+      const tex = new THREE.CanvasTexture(c); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(3, Math.max(1, h / 5));
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.1, r * 0.95, h, 28, 1, true),
+        new THREE.MeshBasicMaterial({ map: tex, color: o.color || 0xbff4ff, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+      col.position.set(x, y + h / 2, z); col.userData.noSee = true; group.add(col);
+      const glow = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.6, r * 0.9, h, 20, 1, true),
+        new THREE.MeshBasicMaterial({ color: o.color || 0x9fe9ff, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+      glow.position.copy(col.position); glow.userData.noSee = true; group.add(glow);
+      // feuilles et pétales qui tournent en montant
+      const leafM = [0xff8ac2, 0x7fe0a8, 0xffe066, 0xffffff].map(cc => new THREE.MeshBasicMaterial({ color: cc, side: THREE.DoubleSide }));
+      const leaves = Array.from({ length: 10 }, (_, k) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.14), leafM[k % 4]); m.userData.noSee = true; group.add(m); return { m, ph: k / 10, a: srand() * 6 }; });
+      // la flèche lumineuse qui flotte au-dessus du socle (on la voit de loin)
+      const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 }));
+      arrow.position.set(x, y + 1.7, z); arrow.userData.noSee = true; group.add(arrow);
+      L.tickers.push(dt => {
+        tex.offset.y -= dt * 0.9; tex.offset.x += dt * 0.05;
+        col.rotation.y += dt * 0.6; glow.material.opacity = 0.1 + Math.sin(T * 2.2) * 0.04;
+        arrow.position.y = y + 1.7 + Math.sin(T * 3) * 0.25; arrow.rotation.y += dt * 2;
+        for (const l of leaves) {
+          l.ph += dt * 0.22; if (l.ph > 1) l.ph -= 1;
+          const a = l.a + l.ph * 14, rr = r * (0.35 + 0.5 * Math.sin(l.ph * Math.PI));
+          l.m.position.set(x + Math.cos(a) * rr, y + 0.3 + l.ph * h, z + Math.sin(a) * rr); l.m.rotation.set(a, a * 1.3, 0);
+        }
+      });
+      L.houses.push({ x, z, r: r + 0.8 });
+      return d;
+    },
+    /* nuage rebondissant : on monte dessus (petite marche), boing ! */
+    cloudPad(x, z, y, o = {}) {
+      const r = o.r || 1.45, pad = addPlat({ kind: 'cyl', x, z, r, top: y + 0.34 }, { ghost: true, bounce: o.power || 18.5 });
+      const g = new THREE.Group(); g.position.set(x, y, z); group.add(g);
+      const cm = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0xffd6ec, emissiveIntensity: 0.35 });
+      const puffs = [];
+      for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2, m = new THREE.Mesh(G.cloud, cm); m.position.set(Math.cos(a) * r * 0.62, 0.12, Math.sin(a) * r * 0.62); m.scale.setScalar(0.62); g.add(m); puffs.push(m); }
+      const mid = new THREE.Mesh(G.cloud, cm); mid.position.y = 0.2; mid.scale.set(0.9, 0.55, 0.9); g.add(mid); puffs.push(mid);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 0.9, 0.05, 6, 28), new THREE.MeshBasicMaterial({ color: 0xff8ac2, transparent: true, opacity: 0.7 })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.5; g.add(ring);
+      g.traverse(m => { if (m.isMesh) m.userData.noSee = true; });
+      L.noGrass.push({ x0: x - r, x1: x + r, z0: z - r, z1: z + r });
+      L.tickers.push(dt => {
+        pad.hit = Math.max(0, (pad.hit || 0) - dt * 2.2);
+        const sq = pad.hit > 0 ? Math.sin(pad.hit * Math.PI * 3) * 0.25 * pad.hit : 0;
+        g.scale.set(1 + sq, 1 - sq * 1.6 + Math.sin(T * 2 + x) * 0.04, 1 + sq);
+        ring.material.opacity = 0.45 + Math.sin(T * 4 + z) * 0.25; ring.scale.setScalar(1 + Math.sin(T * 4 + z) * 0.06);
+      });
+      L.houses.push({ x, z, r: r + 0.6 });
+      return pad;
+    },
+    /* passerelle de bois dans n'importe quelle direction, en pente douce, avec garde-corps */
+    span(ax, az, bx, bz, w, topA, topB) {
+      const len = Math.hypot(bx - ax, bz - az), ux = (bx - ax) / len, uz = (bz - az) / len, nx = -uz, nz = ux;
+      const n = Math.max(3, Math.ceil(len / 0.45));
+      for (let k = 0; k <= n; k++) { const u = k / n; addPlat({ kind: 'cyl', x: ax + (bx - ax) * u, z: az + (bz - az) * u, r: w / 2, top: topA + (topB - topA) * u }, { ghost: true }); }
+      const yaw = Math.atan2(ux, uz), tilt = Math.atan2(topB - topA, len), sl = Math.hypot(len, topB - topA);
+      const g = grp((ax + bx) / 2, (topA + topB) / 2, (az + bz) / 2, yaw);
+      const deck = B(g, w, 0.16, sl, villageMats.wood, 0, -0.06, 0); deck.rotation.x = -tilt;
+      const np = Math.round(sl / 0.55);
+      for (let k = 0; k <= np; k++) { const u = k / np - 0.5, pl = B(g, w + 0.08, 0.03, 0.07, villageMats.door, 0, 0.03 + u * (topB - topA), u * len); }
+      [-1, 1].forEach(sd => {
+        const px = sd * (w / 2 - 0.05);
+        for (let k = 0; k <= Math.round(len / 1.4); k++) { const u = k / Math.round(len / 1.4) - 0.5; B(g, 0.12, 1.0, 0.12, villageMats.wood, px, 0.45 + u * (topB - topA), u * len); Sph(g, 0.08, villageMats.woodLight, px, 0.98 + u * (topB - topA), u * len, 8, 6); }
+        [0.42, 0.86].forEach(hh => { const r = B(g, 0.08, 0.08, sl, villageMats.woodLight, px, hh, 0); r.rotation.x = -tilt; });
+        L.fences.push({ ax: ax + nx * sd * (w / 2 - 0.05) - ux * 0.3, az: az + nz * sd * (w / 2 - 0.05) - uz * 0.3, bx: bx + nx * sd * (w / 2 - 0.05) + ux * 0.3, bz: bz + nz * sd * (w / 2 - 0.05) + uz * 0.3, y: Math.min(topA, topB) });
+      });
+      // cordes et lanternes sous la passerelle : elle a l'air suspendue
+      [-1, 1].forEach(sd => { const lg = Cyl(g, 0.15, 0.15, sl + 0.6, 8, L.mats.trunk, sd * (w / 2 - 0.3), -0.3, 0); lg.rotation.x = Math.PI / 2 - tilt; });
+      L.extraOpenings.push({ x: ax, z: az, r: w / 2 + 0.9 }, { x: bx, z: bz, r: w / 2 + 0.9 });
+      makeLamp(statics, ax - nx * (w / 2 + 0.5) - ux * 0.6, topA, az - nz * (w / 2 + 0.5) - uz * 0.6);
+      L.noGrass.push({ x0: Math.min(ax, bx) - 0.1, x1: Math.max(ax, bx) + 0.1, z0: Math.min(az, bz) - 0.1, z1: Math.max(az, bz) + 0.1 });
+    },
+    /* source : petit bassin entouré de pierres, d'où part un ruisseau */
+    spring(x, y, z) {
+      const sg = grp(x, y, z, 0); M3(new THREE.CircleGeometry(1.3, 20).rotateX(-Math.PI / 2), townMats.water, 0, 0.05, 0, sg);
+      for (let j = 0; j < 9; j++) { const a = j / 9 * Math.PI * 2, rk = M3(G.rock, mats.rock, Math.cos(a) * 1.35, 0.08, Math.sin(a) * 1.35, sg); rk.scale.setScalar(sr(0.45, 0.7)); }
+      L.solids.push({ x, z, hw: 1.2, hd: 1.2, y0: y - 0.5, y1: y + 0.7, water: true }); L.plazas.push({ x, z, r: 1.5, hidden: true });
+    },
+    /* manche à air : elle montre d'où vient le vent */
+    windsock(x, y, z, rot = 0) {
+      const g = grp(x, y, z, 0);
+      Cyl(g, 0.05, 0.06, 3.0, 8, townMats.metal, 0, 1.5, 0); Sph(g, 0.09, townMats.goldShine, 0, 3.05, 0);
+      const sock = new THREE.Group(); sock.position.set(x, y + 2.85, z); group.add(sock);
+      const stripes = [0xff5d73, 0xffffff, 0xff5d73, 0xffffff];
+      const parts = stripes.map((c, k) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.24 - k * 0.04, 0.2 - k * 0.04, 0.42, 12, 1, true).rotateX(Math.PI / 2), new THREE.MeshLambertMaterial({ color: c, side: THREE.DoubleSide })); m.position.z = 0.25 + k * 0.42; sock.add(m); return m; });
+      L.tickers.push(() => { sock.rotation.y = rot + Math.sin(T * 0.9) * 0.25; parts.forEach((m, k) => { m.position.y = -k * 0.05 + Math.sin(T * 6 - k) * 0.03 * k; }); });
+    },
+    /* l'Observatoire des Nuages : tour ronde, coupole qui tourne, grande lunette */
+    observatory(cx, y, cz, rot = 0) {
+      const R0 = 2.7, H0 = 4.4, g = grp(cx, y, cz, rot), wall = lam(0xf4efff), trim = lam(0x7b6cc8), roofM = new THREE.MeshPhongMaterial({ color: 0xc9d4ff, shininess: 110, specular: 0xffffff });
+      Cyl(g, R0 + 0.35, R0 + 0.5, 0.6, 32, townMats.stoneDark, 0, 0.3, 0);
+      Cyl(g, R0, R0 + 0.12, H0, 32, wall, 0, 0.6 + H0 / 2, 0);
+      Cyl(g, R0 + 0.12, R0 + 0.12, 0.28, 32, trim, 0, 0.6 + H0, 0);
+      [1.8, 3.4].forEach(hh => Cyl(g, R0 + 0.03, R0 + 0.03, 0.12, 32, trim, 0, 0.6 + hh, 0));
+      // fenêtres en hublot tout autour et porte vers l'ouest
+      for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2 + 0.2; if (Math.abs(Math.sin(a) + 1) < 0.25) continue; const wx = Math.cos(a) * (R0 + 0.05), wz = Math.sin(a) * (R0 + 0.05);
+        const wm = M3(new THREE.CircleGeometry(0.34, 18), winMat, wx, 3.2, wz, g); wm.rotation.y = Math.PI / 2 - a;
+        const fr = M3(new THREE.TorusGeometry(0.36, 0.06, 6, 18), townMats.goldShine, wx, 3.2, wz, g); fr.rotation.y = Math.PI / 2 - a; }
+      B(g, 1.3, 2.2, 0.3, villageMats.door, 0, 0.6 + 1.1, R0 - 0.02);
+      M3(new THREE.CircleGeometry(0.65, 16, 0, Math.PI), villageMats.door, 0, 2.8, R0 + 0.14, g);
+      B(g, 2.0, 0.22, 1.4, townMats.stoneDark, 0, 0.11, R0 + 0.6);
+      signMesh(g, 'Observatoire des Nuages', 2.6, 0.42, 0, 3.55, R0 + 0.16, { fg: '#ffd23f' });
+      // coupole qui tourne doucement, avec sa fente et la lunette qui dépasse
+      const dome = new THREE.Group(); dome.position.set(cx, y + 0.6 + H0 + 0.1, cz); group.add(dome);
+      const dm = new THREE.Mesh(new THREE.SphereGeometry(R0 + 0.05, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), roofM); dome.add(dm);
+      const slit = new THREE.Mesh(new THREE.BoxGeometry(0.75, R0 + 0.3, 0.2), lam(0x1c2450)); slit.position.set(0, (R0 + 0.3) / 2, R0 * 0.62); slit.rotation.x = -0.75; dome.add(slit);
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.42, 3.4, 18), new THREE.MeshPhongMaterial({ color: 0x2a4cc8, shininess: 100 })); tube.position.set(0, 1.5, 1.6); tube.rotation.x = 0.85; dome.add(tube);
+      [-1.2, 0, 1.2].forEach(o2 => { const rr = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.06, 6, 18), townMats.goldShine); rr.position.set(0, 1.5 + Math.cos(0.85) * o2, 1.6 + Math.sin(0.85) * o2); rr.rotation.x = 0.85 + Math.PI / 2; dome.add(rr); });
+      const lens = new THREE.Mesh(new THREE.CircleGeometry(0.3, 18), new THREE.MeshBasicMaterial({ color: 0x9fe6ff })); lens.position.set(0, 1.5 + Math.cos(0.85) * 1.71, 1.6 + Math.sin(0.85) * 1.71); lens.rotation.x = 0.85 - Math.PI / 2; dome.add(lens);
+      const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.3, 0), new THREE.MeshBasicMaterial({ color: 0xffd23f })); star.position.y = R0 + 0.55; dome.add(star);
+      dome.traverse(m => { if (m.isMesh) m.userData.noSee = true; });
+      L.tickers.push(dt => { dome.rotation.y += dt * 0.12; star.rotation.y += dt * 1.5; star.position.y = R0 + 0.55 + Math.sin(T * 2) * 0.1;
+        if (DN.n > 0.3 && Math.random() < 0.08) emit(cx + rand(-6, 6), y + rand(9, 14), cz + rand(-6, 6), pick([0xffffff, 0xffe9a8, 0x9fe6ff]), 1, 0.1, 0, 0, 1.6); });
+      L.solids.push({ x: cx, z: cz, hw: R0 + 0.3, hd: R0 + 0.3, y0: y - 0.5, y1: y + H0 + 4 });
+      L.houses.push({ x: cx, z: cz, r: R0 + 1.6 });
+      // on peut entrer : le vendeur de billets et le grand télescope sont à l'intérieur
+      const door = toWorld(g, 0, R0 + 1.35); L.obsDoor = { x: door.x, z: door.z, y, rot };
+      api.spot(door.x, door.z, 1.5, 'Entrer dans l’Observatoire', () => obs.enter(), { y });
+    },
+    /* le petit phare des nuages : sa lumière tourne la nuit comme le jour */
+    lighthouse(x, y, z) {
+      const g = grp(x, y, z, 0), red = lam(0xe2574c), white = lam(0xfffaf0);
+      for (let k = 0; k < 4; k++) Cyl(g, 0.78 - k * 0.08, 0.86 - k * 0.08, 0.9, 20, k % 2 ? white : red, 0, 0.45 + k * 0.9, 0);
+      Cyl(g, 0.75, 0.75, 0.12, 20, townMats.metal, 0, 3.66, 0);
+      Cyl(g, 0.5, 0.5, 0.75, 16, winMat, 0, 4.1, 0);
+      const cap = M3(new THREE.ConeGeometry(0.62, 0.7, 16), red, 0, 4.82, 0, g);
+      B(g, 0.5, 0.95, 0.08, villageMats.door, 0, 0.5, 0.82);
+      const head = new THREE.Group(); head.position.set(x, y + 4.1, z); group.add(head);
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 9), new THREE.MeshBasicMaterial({ color: 0xfff1a8 })); head.add(bulb);
+      const beamM = new THREE.MeshBasicMaterial({ color: 0xfff1a8, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+      [0, Math.PI].forEach(a => { const b = new THREE.Mesh(new THREE.ConeGeometry(0.9, 7, 16, 1, true).translate(0, -3.5, 0).rotateZ(Math.PI / 2), beamM); b.rotation.y = a; head.add(b); });
+      head.traverse(m => { if (m.isMesh) m.userData.noSee = true; });
+      L.tickers.push(dt => { head.rotation.y += dt * 1.1; beamM.opacity = 0.1 + DN.n * 0.25; });
+      L.solids.push({ x, z, hw: 0.8, hd: 0.8, y0: y - 0.5, y1: y + 5 });
+      L.houses.push({ x, z, r: 1.6 });
+    },
+    /* arc-en-ciel au-dessus de la cascade */
+    rainbow(x, y, z, rot, R = 6) {
+      const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rot; group.add(g);
+      const cols = [0xff5d73, 0xffa64d, 0xffe066, 0x7fe0a8, 0x6fb6ff, 0xb48cff];
+      const mats2 = cols.map(c => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.32, depthWrite: false, side: THREE.DoubleSide }));
+      cols.forEach((c, k) => { const m = new THREE.Mesh(new THREE.TorusGeometry(R - k * 0.28, 0.14, 6, 48, Math.PI), mats2[k]); m.userData.noSee = true; g.add(m); });
+      L.tickers.push(() => { const o = 0.18 + (1 - DN.n) * 0.16 + Math.sin(T * 0.7) * 0.04; mats2.forEach(m => m.opacity = o); });
+    },
+    /* jardinière suspendue sous un arceau fleuri */
+    flowerArch(x, y, z, rot = 0) {
+      const g = grp(x, y, z, rot), w = 3.2;
+      [-1, 1].forEach(sd => Cyl(g, 0.08, 0.1, 2.6, 8, villageMats.woodLight, sd * w / 2, 1.3, 0));
+      const arc = M3(new THREE.TorusGeometry(w / 2, 0.09, 6, 20, Math.PI), villageMats.woodLight, 0, 2.6, 0, g);
+      for (let k = 0; k <= 10; k++) { const a = k / 10 * Math.PI; Sph(g, 0.17, bloomMats[k % bloomMats.length], Math.cos(a) * w / 2, 2.6 + Math.sin(a) * w / 2, 0.05, 8, 6); if (k % 2) Sph(g, 0.2, mats.leaves[k % mats.leaves.length], Math.cos(a) * w / 2, 2.6 + Math.sin(a) * w / 2, -0.1, 7, 5); }
+      [-1, 1].forEach(sd => { for (let k = 0; k < 5; k++) Sph(g, 0.14, bloomMats[(k + 2) % bloomMats.length], sd * w / 2 + sr(-0.12, 0.12), 0.4 + k * 0.45, sr(-0.12, 0.12), 7, 5); });
+      L.solids.push(...[-1, 1].map(sd => { const t = toWorld(g, sd * w / 2, 0); return { x: t.x, z: t.z, hw: 0.15, hd: 0.15, y0: y - 0.5, y1: y + 2.8 }; }));
+    },
     /* ---------- Le Bourg : sol, routes, places ---------- */
     tiles(x0, x1, z0, z1, size, top) { // pavage de grandes dalles (z0 > z1)
       for (let z = z0; z > z1 + 0.01; z -= size) for (let x = x0; x < x1 - 0.01; x += size)
@@ -1732,6 +2006,10 @@ function buildLevel(i) {
       B(g, 1.7, 0.42, 0.08, villageMats.wood, 0, 0.82, -0.24);
       [-0.72, 0.72].forEach(px => { B(g, 0.08, 0.48, 0.45, townMats.metal, px, 0.24, 0); B(g, 0.08, 0.55, 0.08, townMats.metal, px, 0.78, -0.25); });
       bake(g);
+      // le banc est solide, et on peut s'asseoir dessus
+      solidAt(x, z, rot, 1.8, 0.62, y, 1.1);
+      const b = { x, y, z, rot, seat: toWorld(g, 0, 0.02), front: toWorld(g, 0, 0.85) };
+      api.spot(b.front.x, b.front.z, 1.3, () => seat.on && seat.b === b ? 'Se lever' : 'S’asseoir', () => seat.on ? standUp() : sitDown(b), { y });
     },
     flowerBed(x, y, z, w, d) {
       const g = grp(x, y, z, 0);
@@ -2074,6 +2352,56 @@ function buildLevel(i) {
         const petals = Array.from({ length: 8 }, (_, k) => { const p = new THREE.Group(); p.rotation.y = k / 8 * Math.PI * 2; head.add(p); const m = add(new THREE.SphereGeometry(0.2, 10, 6), ph(0xff8ac2, 40), 0, 0, 0.26, p); m.scale.set(0.6, 0.18, 1); return p; });
         L.tickers.push(dt => { P2.t += dt; const u = P2.on ? Math.min(1, P2.t / 1.0) : 0; head.scale.setScalar(1 + u * 1.2); petals.forEach(p => p.rotation.x = -1.2 * (1 - u)); head.rotation.y += dt * (0.3 + u * 2);
           if (P2.on && Math.random() < 0.3) emit(x + rand(-0.4, 0.4), y + 1.8, z + rand(-0.4, 0.4), pick([0xff8ac2, 0xffd23f, 0xffffff]), 1, 0.8, 1.5, -0.3, 1.2); });
+      } else if (kind === 'chimes') {
+        // carillon à vent : des tubes qui tintent quand la brise souffle
+        g.scale.setScalar(1.45);
+        add(new THREE.CylinderGeometry(0.06, 0.08, 2.2, 8), villageMats.wood, 0, 1.1, 0);
+        const arm = add(new THREE.BoxGeometry(1.0, 0.07, 0.07), villageMats.wood, 0.35, 2.15, 0);
+        const hub = new THREE.Group(); hub.position.set(0.7, 2.05, 0); g.add(hub);
+        add(new THREE.CylinderGeometry(0.28, 0.28, 0.05, 16), ph(0x7b6cc8), 0, 0, 0, hub);
+        const tubes = [0.62, 0.52, 0.44, 0.36, 0.3].map((L2, k) => { const a = k / 5 * Math.PI * 2, t = new THREE.Group(); t.position.set(Math.cos(a) * 0.2, -0.04, Math.sin(a) * 0.2); hub.add(t);
+          add(new THREE.CylinderGeometry(0.035, 0.035, L2, 8), ph([0xffd23f, 0x9fe6ff, 0xff8ac2, 0x7fe0a8, 0xffffff][k], 120), 0, -L2 / 2, 0, t); return t; });
+        const clap = add(new THREE.SphereGeometry(0.07, 10, 8), ph(0xfff1d6), 0, -0.4, 0, hub);
+        let ting = 0;
+        L.tickers.push(dt => { P2.t += dt; const w = P2.on ? 1 : 0.18;
+          tubes.forEach((t, k) => { t.rotation.x = Math.sin(T * (3 + k * 0.6)) * 0.25 * w; t.rotation.z = Math.cos(T * (2.6 + k * 0.5)) * 0.25 * w; });
+          hub.rotation.y += dt * (0.3 + w * 1.5); clap.position.x = Math.sin(T * 5) * 0.08 * w;
+          if (P2.on) { ting -= dt; if (ting <= 0) { ting = 0.22 + Math.random() * 0.3; const f = pick([1568, 1760, 2093, 2349, 2637]); tone(f, 0, 0.5, 'sine', 0.04); emit(x + 0.7, y + 1.7, z, pick([0xffd23f, 0x9fe6ff, 0xff8ac2]), 2, 0.8, 1.2, -0.3, 0.9); } } });
+      } else if (kind === 'nest') {
+        // nid perché sur une souche : les oisillons sortent la tête puis s'envolent
+        g.scale.setScalar(1.3);
+        add(new THREE.CylinderGeometry(0.42, 0.5, 0.9, 12), L.mats.trunk, 0, 0.45, 0);
+        const nest = add(new THREE.TorusGeometry(0.42, 0.16, 8, 18), ph(0xb08350, 10), 0, 1.0, 0); nest.rotation.x = Math.PI / 2;
+        add(new THREE.CircleGeometry(0.36, 16).rotateX(-Math.PI / 2), ph(0x8a6238, 10), 0, 0.98, 0);
+        const birds = [0, 1, 2].map(k => { const b = new THREE.Group(); b.position.set((k - 1) * 0.2, 0.95, (k % 2) * 0.1 - 0.05); g.add(b);
+          const body = add(new THREE.SphereGeometry(0.15, 10, 8), ph([0xffd84a, 0x7fd7ff, 0xff9ab8][k]), 0, 0, 0, b);
+          add(new THREE.ConeGeometry(0.04, 0.09, 6).rotateX(Math.PI / 2), ph(0xff8a3d), 0, 0.02, 0.14, b);
+          [-1, 1].forEach(sd => add(new THREE.SphereGeometry(0.02, 6, 5), new THREE.MeshBasicMaterial({ color: 0x2a1a20 }), sd * 0.05, 0.06, 0.11, b));
+          const wings = [-1, 1].map(sd => { const w = add(new THREE.SphereGeometry(0.08, 8, 6), ph([0xffc21a, 0x4fb8ef, 0xff7aa0][k]), sd * 0.12, 0, -0.02, b); w.scale.set(0.5, 0.25, 1); return w; });
+          return { b, wings, k }; });
+        L.tickers.push(dt => { P2.t += dt;
+          birds.forEach(({ b, wings, k }) => {
+            const t = P2.on ? P2.t - k * 0.5 : -1;
+            if (t < 0.6) { b.position.set((k - 1) * 0.2, 0.95 + (P2.on && t > 0 ? Math.abs(Math.sin(t * 10)) * 0.12 : 0), (k % 2) * 0.1 - 0.05); b.rotation.y = Math.sin(T * 2 + k) * 0.6; wings.forEach(w => w.rotation.z = 0); }
+            else { const u = Math.min(2.2, t - 0.6), a = (t - 0.6) * 2.2 + k * 2.1; b.position.set(Math.cos(a) * (0.55 + u * 0.3), 1.2 + u * 0.42 + Math.sin(t * 4 + k) * 0.15, Math.sin(a) * (0.55 + u * 0.3)); b.rotation.y = -a; wings.forEach((w, j) => w.rotation.z = Math.sin(T * 30) * 0.9 * (j ? 1 : -1)); }
+          });
+          if (P2.on && P2.t > 0.6 && Math.random() < 0.15) SFX.chirp(0.5); });
+      } else if (kind === 'balloon') {
+        // petite montgolfière attachée : elle se gonfle et monte au bout de sa corde
+        const peg = add(new THREE.CylinderGeometry(0.08, 0.1, 0.5, 8), villageMats.wood, 0, 0.25, 0);
+        const bal = new THREE.Group(); g.add(bal);
+        const env = add(new THREE.SphereGeometry(0.8, 18, 14), ph(0xff5d73, 40), 0, 0, 0, bal); env.scale.set(1, 1.15, 1);
+        [0, 1, 2, 3, 4, 5].forEach(k => { const sp = add(new THREE.SphereGeometry(0.81, 18, 14, k / 6 * Math.PI * 2, 0.35), ph(k % 2 ? 0xffd23f : 0xffffff, 40), 0, 0, 0, bal); sp.scale.set(1.002, 1.152, 1.002); });
+        const basket = add(new THREE.CylinderGeometry(0.22, 0.18, 0.26, 10), villageMats.wood, 0, -1.25, 0, bal);
+        [-1, 1].forEach(a => [-1, 1].forEach(b2 => { const r = add(new THREE.CylinderGeometry(0.01, 0.01, 0.55, 4), villageMats.door, a * 0.16, -0.95, b2 * 0.16, bal); }));
+        const flame = add(new THREE.ConeGeometry(0.07, 0.2, 8), new THREE.MeshBasicMaterial({ color: 0xffb02e }), 0, -1.0, 0, bal);
+        const lineGeo = new THREE.BufferGeometry().setFromPoints([new V3(), new V3()]); g.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0xffffff })));
+        L.tickers.push(dt => { P2.t += dt; const u = P2.on ? Math.min(1, P2.t / 2.2) : 0, ease = u * u * (3 - 2 * u);
+          const s2 = 0.55 + ease * 0.45; bal.scale.setScalar(s2);
+          bal.position.set(Math.sin(T * 0.8) * 0.15 * (0.3 + ease), 1.9 + ease * 3.2 + Math.sin(T * 1.3) * 0.08, 0);
+          flame.visible = !!P2.on && Math.sin(T * 20) > -0.3; flame.scale.y = 0.8 + Math.random() * 0.6;
+          const pa = lineGeo.attributes.position; pa.setXYZ(0, 0, 0.5, 0); pa.setXYZ(1, bal.position.x, bal.position.y - 1.38 * s2, 0); pa.needsUpdate = true;
+          if (P2.on && Math.random() < 0.2) emit(x + bal.position.x, y + bal.position.y + 0.8, z, pick([0xffd23f, 0xff5d73, 0xffffff]), 1, 0.5, 0.6, -0.2, 1.0); });
       }
       L.houses.push({ x, z, r: 1.4 });
       L.solids.push({ x, z, hw: 0.45, hd: 0.45, y0: y - 0.5, y1: y + 1.6 });
@@ -2746,7 +3074,7 @@ function buildLevel(i) {
   for (const p of L.plats) if (!p.bare) addGrass(p, p.group);
   L.ringsTotal = L.rings.length;
   L.killY = Math.min(...L.plats.map(p => p.top)) - 13;
-  if (def.fence) buildFences(group, def.openings || []);
+  if (def.fence) buildFences(group, (def.openings || []).concat(L.extraOpenings || []));
   if (def.townFence) buildFences(group, def.townFence, q => q.town);
   if (def.train) L.train = makeTrain(group);
   const onRoad = (x, z, m) => L.noGrass.some(r => x > r.x0 - m && x < r.x1 + m && z > r.z0 - m && z < r.z1 + m)
@@ -2792,10 +3120,16 @@ function buildLevel(i) {
 
   /* Îles lointaines */
   const zMin = Math.min(...L.plats.map(p => p.z)) - 20;
+  // îles de décor au loin : jamais au milieu du parcours (l'archipel des Îles Flottantes est large)
+  const nearPlay = (x, z, m) => L.plats.some(q => !q.ghost && (q.kind === 'box'
+    ? Math.hypot(Math.max(0, Math.abs(x - q.x) - q.w / 2), Math.max(0, Math.abs(z - q.z) - q.d / 2)) < m
+    : Math.hypot(x - q.x, z - q.z) - q.r < m));
   for (let k = 0; k < (def.wide ? 26 : 18); k++) {
     const side = srand() < 0.5 ? -1 : 1;
     const ig = new THREE.Group(); const r = sr(3, 7.5);
     ig.position.set(side * (def.wide ? sr(66, 112) : def.train ? sr(42, 75) : sr(22, 65)), sr(-16, 20), sr(zMin - 20, 30));
+    for (let tries = 0; tries < 14 && nearPlay(ig.position.x, ig.position.z, r + 9); tries++) ig.position.set(side * sr(30, 80), sr(-16, 20), sr(zMin - 20, 30));
+    if (nearPlay(ig.position.x, ig.position.z, r + 9)) continue;
     addIslandBody(ig, 'cyl', 0, 0, r, false);
     const nt = 1 + Math.floor(srand() * 3);
     for (let t = 0; t < nt; t++) addTree(ig, sr(-r * 0.6, r * 0.6), 0, sr(-r * 0.6, r * 0.6), sr(0.9, 1.6));
@@ -2888,7 +3222,7 @@ function makeShot(x, y, z, vx, vy, vz) {
 
 /* ---------- Barrières (niveaux 1 et 2) ---------- */
 function buildFences(group, openings, only) {
-  const plats = L.plats.filter(q => !q.move && !q.bare && (!only || only(q))), segs = [];
+  const plats = L.plats.filter(q => !q.move && !q.bare && !q.noFence && (!only || only(q))), segs = [];
   for (const p of plats) {
     let poly;
     if (p.kind === 'box') { const x0 = p.x - p.w / 2, x1 = p.x + p.w / 2, z0 = p.z - p.d / 2, z1 = p.z + p.d / 2; poly = [[x0, z1], [x1, z1], [x1, z0], [x0, z0]]; }
@@ -2904,7 +3238,7 @@ function buildFences(group, openings, only) {
         const open = openings.some(o => Math.hypot(mx - o.x, mz - o.z) < o.r);
         if (covered || open) { if (run) { segs.push(run); run = null; } continue; }
         const ex = ax + (bx - ax) * u1, ez = az + (bz - az) * u1;
-        if (run) { run.bx = ex; run.bz = ez; } else run = { ax: ax + (bx - ax) * u0, az: az + (bz - az) * u0, bx: ex, bz: ez, y: p.top };
+        if (run) { run.bx = ex; run.bz = ez; } else run = { ax: ax + (bx - ax) * u0, az: az + (bz - az) * u0, bx: ex, bz: ez, y: p.top, p };
       }
       if (run) segs.push(run);
     }
@@ -2941,6 +3275,9 @@ function collideObstacles() {
   const R = PR + 0.12;
   for (const f of L.fences) {
     if (p.y < f.y - 0.6 || p.y > f.y + 4) continue;
+    // porté par le vent, ou en arrivant d'ailleurs par les airs : la barrière ne bloque que pour sortir de l'île
+    if (P.windT > 0) continue;
+    if (f.p && !P.grounded && !inFoot(f.p, p.x, p.z, -0.05)) continue;
     const ex = f.bx - f.ax, ez = f.bz - f.az, l2 = ex * ex + ez * ez;
     const t = Math.max(0, Math.min(1, ((p.x - f.ax) * ex + (p.z - f.az) * ez) / l2));
     const cx = f.ax + ex * t, cz = f.az + ez * t, dx = p.x - cx, dz = p.z - cz, d = Math.hypot(dx, dz);
@@ -3277,11 +3614,26 @@ function makeGoal(x, y, z) {
 
 /* ---------- Joueur ---------- */
 const SPEED = 7.4, ACC_G = 46, ACC_A = 20, GRAV = 32, JUMP = 12.2, HOVER = 0.85, PR = 0.35, PH = 1.1;
+// Îles Flottantes : après un courant d'air ou un nuage rebondissant, le vent porte le robot (plané automatique)
+const GLIDE = 3.4, GLIDE_VY = -1.5;
 const P = { pos: new V3(), vel: new V3(), grounded: false, ground: null, coyote: 0, jumpBuf: 0, fuel: HOVER, hovering: false, facing: Math.PI, inv: 0, hearts: 3, lastSafe: new V3(), squash: 1, run: 0, blink: 0, dustT: 0 };
 
+/* ---------- S'asseoir sur un banc ---------- */
+const seat = { on: false, b: null };
+function sitDown(b) {
+  seat.on = true; seat.b = b; P.vel.set(0, 0, 0); P.pos.set(b.seat.x, b.y, b.seat.z); P.facing = b.rot; P.grounded = true;
+  tone(523, 659, 0.12, 'sine', 0.05);
+  guide.say('bench', [['calm', 'Ah, une petite pause sur le banc… Regarde comme c’est joli !'], ['warm', 'Pour te relever, bouge simplement, ou appuie sur « Se lever ».']], { prio: 2 });
+}
+function standUp() {
+  if (!seat.on) return; const b = seat.b; seat.on = false; seat.b = null;
+  P.pos.set(b.front.x, b.y, b.front.z); P.vel.set(0, 0, 0); P.grounded = true; P.squash = 1.15;
+}
 function resetPlayer() {
+  seat.on = false; seat.b = null;
   P.pos.set(0, 0, 6); P.vel.set(0, 0, 0); P.grounded = true; P.ground = L.plats[0]; P.coyote = 0; P.jumpBuf = 0; P.fuel = HOVER;
   P.hovering = false; P.facing = Math.PI; P.inv = 0; P.lastSafe.copy(P.pos); P.squash = 1;
+  P.drafted = false; P.glide = 0; P.windT = 0; P.boostT = 0; P.inDraft = null;
   R.root.position.copy(P.pos); R.root.rotation.y = Math.PI; R.root.visible = true;
   camPos.set(0, 5, 15); camLook.set(0, 1, 0); camFocus.copy(P.pos); camPitch = camPitchTarget = 0; camYaw = camYawTarget = 0;
   if (typeof pet !== 'undefined') pet.place();
@@ -3329,15 +3681,32 @@ function updatePlayer(dt, inp) {
     P.vel.y = JUMP; P.grounded = false; P.ground = null; P.coyote = 0; P.jumpBuf = 0; P.squash = 1.32;
     SFX.jump(); emit(p.x, p.y + 0.1, p.z, 0xcfd8e6, 8, 2.5, 1, 4, 0.4);
   }
+  // courants d'air : le tourbillon soulève le robot jusqu'en haut, puis le vent le porte
+  let draft = null;
+  if (L.drafts) for (const d of L.drafts) if (Math.hypot(p.x - d.x, p.z - d.z) < d.r && p.y > d.y0 - 0.4 && p.y < d.y1 + 0.6) { draft = d; break; }
+  if (draft !== P.inDraft) { if (draft) draftEnter(draft); P.inDraft = draft; }
+  if (P.windT > 0) P.windT -= dt;
+  if (P.boostT > 0) P.boostT -= dt;
   // planage
-  const wantHover = !P.grounded && inp.jump && P.vel.y < 0.5 && P.fuel > 0;
-  if (wantHover) {
+  const wantHover = !draft && !P.grounded && inp.jump && P.vel.y < 0.5 && P.fuel > 0;
+  if (draft) {
+    P.grounded = false; P.ground = null; P.coyote = 0; P.hovering = false;
+    const tgt = THREE.MathUtils.clamp((draft.y1 - p.y) * 2.6, -2.5, draft.lift);
+    P.vel.y += (tgt - P.vel.y) * Math.min(1, dt * 4.5);
+    P.fuel = HOVER; P.drafted = true; P.glide = GLIDE; P.windT = 0.7;
+    if (Math.random() < 0.5) emit(p.x + rand(-0.5, 0.5), p.y - 0.3, p.z + rand(-0.5, 0.5), 0xe6f8ff, 1, 0.5, -1.5, 0, 0.5);
+  } else if (wantHover) {
     if (!P.hovering) { P.hovering = true; SFX.hover(); }
     P.fuel -= dt; P.vel.y += (0.4 - P.vel.y) * Math.min(1, dt * 12);
     if (Math.random() < 0.7) emit(p.x + rand(-0.15, 0.15), p.y - 0.2, p.z, 0x7ff0ff, 1, 0.4, -3, 0, 0.35);
+  } else if (P.drafted && P.glide > 0 && P.vel.y < 0 && !P.grounded) {
+    // le vent porte le robot : il descend tout doucement, on n'a qu'à se diriger
+    if (!P.hovering) { P.hovering = true; SFX.hover(); }
+    P.glide -= dt; P.vel.y += (GLIDE_VY - P.vel.y) * Math.min(1, dt * 6);
+    if (Math.random() < 0.35) emit(p.x + rand(-0.4, 0.4), p.y + 0.2, p.z + rand(-0.4, 0.4), 0xffffff, 1, 0.6, 0.4, -0.2, 0.6);
   } else {
     P.hovering = false;
-    P.vel.y -= GRAV * (P.vel.y > 0 && !inp.jump ? 2.1 : 1) * dt;
+    P.vel.y -= GRAV * (P.vel.y > 0 && !inp.jump && P.boostT <= 0 ? 2.1 : 1) * dt;
     if (P.vel.y < -28) P.vel.y = -28;
   }
   // déplacement + collisions latérales
@@ -3358,10 +3727,16 @@ function updatePlayer(dt, inp) {
       if (inFoot(q, p.x, p.z, 0) && prevY + PH <= bottom + 0.02 && p.y + PH > bottom) { p.y = bottom - PH; P.vel.y = 0; }
     }
   }
-  if (land) {
+  if (land && land.bounce) {
+    // nuage rebondissant : boing ! puis le vent porte le robot
+    p.y = land.top; P.vel.y = land.bounce; P.grounded = false; P.ground = null; P.coyote = 0; P.fuel = HOVER;
+    P.drafted = true; P.glide = GLIDE; P.windT = 1.4; P.boostT = 0.9; P.squash = 1.45; land.hit = 1;
+    SFX.boing(); emit(p.x, land.top + 0.2, p.z, 0xffffff, 16, 3.5, 2, 2, 0.6); bounceSaid();
+  } else if (land) {
     if (!was && P.vel.y < -7) { P.squash = 0.68; SFX.land(); emit(p.x, land.top + 0.1, p.z, 0xe8e2c8, 12, 3, 1.2, 5, 0.45); }
     p.y = land.top; P.vel.y = 0; P.grounded = true; P.ground = land; P.fuel = HOVER; P.coyote = 0.1;
-    if (!land.move) {
+    P.drafted = false; P.glide = 0;
+    if (!land.move && !land.ghost) {
       if (land.kind === 'box') {
         P.lastSafe.set(land.w > 2 ? THREE.MathUtils.clamp(p.x, land.x - land.w / 2 + 1, land.x + land.w / 2 - 1) : land.x, land.top,
           land.d > 2 ? THREE.MathUtils.clamp(p.z, land.z - land.d / 2 + 1, land.z + land.d / 2 - 1) : land.z);
@@ -3378,13 +3753,24 @@ function updatePlayer(dt, inp) {
       ['excited', pick(['Oups, tu es tombé !', 'Oh là là, plouf dans le vide !', 'Pas grave, on recommence !'])],
       ['warm', levelIndex > 0 ? 'Astuce : en l’air, garde le doigt sur Saut. Tu vas planer plus loin !' : 'Astuce : regarde la petite ombre sous le robot. Elle montre où tu vas tomber.'],
     ], { scope: 'game', prio: 2 });
-    if (state === 'play') { p.copy(P.lastSafe); p.y += 0.5; P.vel.set(0, 0, 0); P.inv = 1.4; camFocus.copy(p); }
+    if (state === 'play') { p.copy(P.lastSafe); p.y += 0.5; P.vel.set(0, 0, 0); P.inv = 1.4; camFocus.copy(p); P.drafted = false; P.glide = 0; P.windT = 0; P.boostT = 0; }
   }
   if (P.inv > 0) P.inv -= dt;
   if (P.turbo > 0) {
     P.turbo -= dt; updateTurboChip();
     if (P.grounded && Math.hypot(P.vel.x, P.vel.z) > 4 && Math.random() < 0.5) emit(p.x, p.y + 0.3, p.z, 0x7dff8a, 1, 0.8, 1.2, 1, 0.4);
   }
+}
+
+/* Pip explique les courants d'air et les nuages la première fois */
+function draftEnter(d) {
+  SFX.wind();
+  if (state !== 'play') return;
+  guide.say('draft-first', [['excited', 'Wouaaah ! Le vent nous soulève !'], ['warm', 'Tout là-haut, avance vers une île : le vent te porte, tu vas planer tout seul.']], { prio: 3 });
+}
+function bounceSaid() {
+  if (state !== 'play') return;
+  guide.say('bounce-first', [['excited', 'Boing ! Un nuage rebondissant !'], ['warm', 'Dans les airs, dirige-toi : le vent te porte jusqu’à la prochaine île.']], { prio: 3 });
 }
 
 function animateRobot(dt, celebrating) {
@@ -3396,6 +3782,15 @@ function animateRobot(dt, celebrating) {
   }
   if (celebrating) P.facing += dt * 9;
   R.root.position.copy(P.pos); R.root.rotation.y = P.facing;
+  if (seat.on) { // assis sur le banc : jambes tendues, bras posés, petit balancement des pieds
+    P.squash = 1; R.rig.scale.set(1, 1, 1); R.rig.position.y = 0.2; R.rig.rotation.x = -0.12;
+    R.legs[0].rotation.x = -1.45 + Math.sin(T * 2.2) * 0.12; R.legs[1].rotation.x = -1.45 - Math.sin(T * 2.2) * 0.12;
+    R.arms[0].rotation.x = R.arms[1].rotation.x = -0.25; R.arms[0].rotation.z = -0.25; R.arms[1].rotation.z = 0.25;
+    R.flames.forEach(f => f.visible = false); R.shadow.visible = true; R.shadow.position.set(P.pos.x, P.pos.y + 0.03, P.pos.z);
+    P.blink -= dt; if (P.blink < -3.2) P.blink = 0.12; const ey0 = P.blink > 0 ? 0.15 : 1.5; R.eyes.forEach(e => e.scale.y = ey0);
+    R.head.rotation.z = Math.sin(T * 1.3) * 0.06; animateCostume(dt); R.root.visible = !P.hidden;
+    return;
+  }
   P.squash += (1 - P.squash) * Math.min(1, dt * 10);
   R.rig.scale.set(1 / Math.sqrt(P.squash), P.squash, 1 / Math.sqrt(P.squash));
   const k = Math.min(1, sp / SPEED);
@@ -3680,7 +4075,7 @@ function autoCamera(dt) {
   const manual = keys.KeyJ || keys.KeyL || keys.KeyU || keys.KeyO || Math.abs(padCamX) > 0.2 || Math.abs(padCamY) > 0.2 || camDrag;
   if (manual) { camManualT = 0; return; }
   camManualT += dt;
-  if (!camAuto || camManualT < 0.9) return;
+  if (!camAuto || camManualT < 0.9 || obs.inside) return;
   const sp = Math.hypot(P.vel.x, P.vel.z), w = Math.min(1, sp / curSpeed());
   if (w < 0.3) return; // à l'arrêt ou presque : la caméra reste où le joueur l'a mise
   const ramp = Math.min(1, (camManualT - 0.9) / 1.2) * (P.grounded ? 1 : 0.6);
@@ -3749,13 +4144,14 @@ function updateCamera(dt) {
     camPitch += (camPitchTarget - camPitch) * (1 - Math.exp(-dt * 10));
     const portrait = camera.aspect < 0.85;
     if (world.camera(dt)) return;
+    if (obs.camera(dt)) return;
     if (lila.camera(dt)) return;
     if (questCine()) {
       // la caméra cadre le robot et l'habitant (ou l'habitant et son trésor)
       const v = quest.v, def = v.questDef, a = quest.phase === 'show' && def.prop ? def.prop.g.position : P.pos;
       const mx = (a.x + v.pos.x) / 2, mz = (a.z + v.pos.z) / 2, ex = v.pos.x - a.x, ez = v.pos.z - a.z, el = Math.hypot(ex, ez) || 1;
       let px = -ez / el, pz = ex / el; const cx = camPos.x - mx, cz = camPos.z - mz; if (px * cx + pz * cz < 0) { px = -px; pz = -pz; }
-      const sh = quest.phase === 'show', ly = sh ? ({ kite: 3.6, telescope: 2.6, flower: 1.8 }[def.propKind] || 1.4) : 1.2, dist = sh ? (def.propKind === 'kite' ? 8.5 : 6) : 4.8, k = 1 - Math.exp(-dt * 3.5);
+      const sh = quest.phase === 'show', ly = sh ? ({ kite: 3.6, telescope: 2.6, flower: 1.8, balloon: 3.4, chimes: 2.4, nest: 1.9 }[def.propKind] || 1.4) : 1.2, dist = sh ? (def.propKind === 'kite' || def.propKind === 'balloon' ? 8.5 : 6) : 4.8, k = 1 - Math.exp(-dt * 3.5);
       camPos.lerp(tmpV.set(mx + px * dist, v.y + (sh ? 2.2 + ly * 0.5 : 2.2), mz + pz * dist), k); camLook.lerp(tmpL.set(mx, v.y + ly, mz), k);
       camFocus.copy(P.pos);
       camera.position.copy(camPos); camera.lookAt(camLook); sky.position.copy(camera.position);
@@ -4312,6 +4708,16 @@ const SFX = {
   },
   alert() { tone(880, 1320, 0.12, 'square', 0.05); tone(880, 1320, 0.12, 'square', 0.05, 0.15); },
   bonk() { tone(300, 80, 0.25, 'triangle', 0.18); },
+  boing() { tone(220, 880, 0.22, 'sine', 0.14); tone(440, 1320, 0.16, 'triangle', 0.05, 0.05); },
+  wind() {
+    tone(260, 620, 0.5, 'sine', 0.035);
+    if (actx && sfxOn && noiseBuf) { // souffle de vent qui monte
+      const t = actx.currentTime, s = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+      s.buffer = noiseBuf; s.loop = true; f.type = 'bandpass'; f.Q.value = 1.2; f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(1800, t + 0.9);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.15); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+      s.connect(f).connect(g).connect(sfxGain); s.start(t); s.stop(t + 1.15);
+    }
+  },
   shoot() { tone(900, 300, 0.18, 'sawtooth', 0.05); },
   chirp(v) { const a = 0.02 + 0.06 * v; tone(1400, 2100, 0.07, 'sine', a); tone(1700, 2500, 0.07, 'sine', a, 0.1); },
   rescue() { [784, 988, 1175, 1568, 1976].forEach((f, i) => tone(f, 0, 0.22, 'sine', 0.1, i * 0.07)); tone(392, 0, 0.6, 'triangle', 0.08, 0.35); },
@@ -4798,9 +5204,10 @@ const LEVEL_INTRO = [
     ['whisper', 'Psst… un petit robot se cache derrière une maison, tout au fond du jardin.'],
   ],
   () => [
-    ['excited', 'Bienvenue sur les Îles Flottantes ! Il y a un village sur chaque île.'],
-    ['warm', 'Des petits ponts de bois relient les îles. Ils ont des barrières : tu ne peux pas tomber !'],
-    ['whisper', 'Le petit robot perdu attend sur une petite île ronde, sur le côté.'],
+    ['excited', 'Bienvenue sur les Îles Flottantes ! Des îles partout, même dans le ciel !'],
+    ['warm', 'Pour aller tout droit, prends les ponts de bois : ils ont des barrières, tu ne peux pas tomber.'],
+    ['excited', 'Et pour t’envoler, cherche les tourbillons de vent qui brillent et les nuages roses qui rebondissent !'],
+    ['whisper', 'Le petit robot perdu attend sur un îlot, tout là-haut dans le ciel. Un tourbillon y mène, près du village.'],
   ],
   () => [
     ['warm', 'Voici le Bourg du Crépuscule ! C’est une grande ville, toute dorée au coucher du soleil.'],
@@ -6319,6 +6726,8 @@ function patchLevelSee() {
 }
 const seeBuf = new THREE.Vector2(), seeA = new V3(), seeB = new V3();
 function updateSee() {
+  // la caméra se tourne et s'incline librement : plus besoin de rendre le décor transparent
+  SEE.uSeeOn.value = 0; return;
   const on = (state === 'play' || state === 'clear' || state === 'over' || state === 'feedmenu') && !P.hidden;
   SEE.uSeeOn.value = on ? 1 : 0; if (!on) return;
   renderer.getDrawingBufferSize(seeBuf);
@@ -7273,6 +7682,323 @@ const world = (() => {
   };
 })();
 
+/* ---------- L'Observatoire des Nuages : on entre, on achète un billet, on regarde dans le grand télescope ---------- */
+const obs = (() => {
+  const C = new V3(0, 400, 0), RR = 6.2, WH = 4.6, PRICE = 8, VIEW = 30;
+  const O = { inside: false, lock: false, tele: false, ticket: false, fade: 0, fadeDir: 0, after: null, g: null, v: null, plat: null, fences: [], solids: [], spots: [], ticks: [], firstIn: true, firstView: true };
+  const fadeEl = $('homeFade');
+  const setFade = v => { fadeEl.hidden = v <= 0.001; fadeEl.style.opacity = Math.max(0, Math.min(1, v)); };
+  function transition(fn) { if (O.fadeDir) return; O.fadeDir = 1; O.after = fn; O.lock = true; P.vel.set(0, 0, 0); }
+  const canvasTex = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); return t; };
+
+  /* ===================== l'intérieur ===================== */
+  function build() {
+    const g = new THREE.Group(); g.position.copy(C); scene.add(g); O.g = g;
+    const mc = new Map(), M = (c, o) => { const k = c + JSON.stringify(o || {}); if (!mc.has(k)) mc.set(k, new THREE.MeshLambertMaterial(Object.assign({ color: c }, o || {}))); return mc.get(k); };
+    const ph = (c, sh = 80) => new THREE.MeshPhongMaterial({ color: c, shininess: sh, specular: 0xffffff });
+    const add = (geo, mat, x, y, z, par = g) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); par.add(m); return m; };
+    const box = (w, h, d, mat, x, y, z, par) => add(new THREE.BoxGeometry(w, h, d), mat, x, y, z, par);
+    // plancher en étoile
+    const floorTex = canvasTex(512, 512, (x, w) => {
+      const c = w / 2; x.fillStyle = '#b07a48'; x.fillRect(0, 0, w, w);
+      for (let k = 0; k < 24; k++) { x.beginPath(); x.moveTo(c, c); x.arc(c, c, c, k / 24 * Math.PI * 2, (k + 1) / 24 * Math.PI * 2); x.closePath(); x.fillStyle = k % 2 ? '#c98f55' : '#a86e40'; x.fill(); }
+      x.lineWidth = 10; x.strokeStyle = '#ffd23f'; x.beginPath(); x.arc(c, c, c * 0.42, 0, 7); x.stroke();
+      x.fillStyle = '#2a3c8f'; x.beginPath(); x.arc(c, c, c * 0.4, 0, 7); x.fill();
+      x.fillStyle = '#ffd23f'; x.beginPath(); for (let k = 0; k < 16; k++) { const r = k % 2 ? c * 0.12 : c * 0.34, a = k / 16 * Math.PI * 2 - Math.PI / 2; x.lineTo(c + Math.cos(a) * r, c + Math.sin(a) * r); } x.closePath(); x.fill();
+    });
+    add(new THREE.CircleGeometry(RR, 56).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: floorTex }), 0, 0.02, 0);
+    add(new THREE.CylinderGeometry(RR + 0.25, RR + 0.4, 0.7, 48), M(0x8f86b8), 0, -0.34, 0);
+    // murs vus de l'intérieur (le mur côté caméra disparaît : on voit dans la pièce comme dans une maison de poupée)
+    add(new THREE.CylinderGeometry(RR, RR, WH, 48, 1, true), M(0xf3eeff, { side: THREE.BackSide }), 0, WH / 2, 0);
+    add(new THREE.CylinderGeometry(RR - 0.02, RR - 0.02, 1.0, 48, 1, true), M(0x7b6cc8, { side: THREE.BackSide }), 0, 0.5, 0);
+    add(new THREE.CylinderGeometry(RR - 0.03, RR - 0.03, 0.12, 48, 1, true), M(0xffd23f, { side: THREE.BackSide }), 0, 1.02, 0);
+    // coupole étoilée
+    const domeTex = canvasTex(1024, 256, (x, w, h) => { const gr = x.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#0b1240'); gr.addColorStop(1, '#2a3c8f'); x.fillStyle = gr; x.fillRect(0, 0, w, h);
+      for (let k = 0; k < 420; k++) { x.fillStyle = 'rgba(255,255,230,' + (0.4 + Math.random() * 0.6) + ')'; x.beginPath(); x.arc(Math.random() * w, Math.random() * h, Math.random() * 1.7 + 0.4, 0, 7); x.fill(); }
+      x.strokeStyle = 'rgba(159,230,255,.45)'; x.lineWidth = 2; [[120, 60, 180, 90, 240, 70, 300, 120], [600, 150, 660, 110, 720, 140], [880, 60, 930, 120, 980, 90]].forEach(pts => { x.beginPath(); for (let j = 0; j < pts.length; j += 2) x.lineTo(pts[j], pts[j + 1]); x.stroke(); }); });
+    add(new THREE.SphereGeometry(RR, 48, 18, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ map: domeTex, side: THREE.BackSide }), 0, WH, 0);
+    // hublots et affiches du ciel
+    for (let k = 0; k < 7; k++) { const a = -Math.PI / 2 + (k - 3) * 0.55 + Math.PI; const wx = Math.sin(a) * (RR - 0.05), wz = Math.cos(a) * (RR - 0.05);
+      const w = add(new THREE.CircleGeometry(0.42, 20), new THREE.MeshBasicMaterial({ color: 0x9fd8ff }), wx, 2.6, wz); w.lookAt(C.x, C.y + 2.6, C.z);
+      const fr = add(new THREE.TorusGeometry(0.45, 0.06, 6, 20), ph(0xffd23f), wx * 0.995, 2.6, wz * 0.995); fr.lookAt(C.x, C.y + 2.6, C.z); }
+    const poster = (txt, draw, a) => { const t = canvasTex(256, 320, (x, w, h) => { x.fillStyle = '#0f1838'; x.fillRect(0, 0, w, h); x.strokeStyle = '#ffd23f'; x.lineWidth = 8; x.strokeRect(4, 4, w - 8, h - 8); draw(x); x.fillStyle = '#ffd23f'; x.font = 'bold 26px Nunito, sans-serif'; x.textAlign = 'center'; x.fillText(txt, w / 2, h - 26); });
+      const m = add(new THREE.PlaneGeometry(1.1, 1.38), new THREE.MeshBasicMaterial({ map: t }), Math.sin(a) * (RR - 0.08), 2.0, Math.cos(a) * (RR - 0.08)); m.lookAt(C.x, C.y + 2.0, C.z); };
+    poster('Saturne', x => { x.fillStyle = '#e8c27a'; x.beginPath(); x.arc(128, 140, 52, 0, 7); x.fill(); x.strokeStyle = '#fff1c8'; x.lineWidth = 10; x.beginPath(); x.ellipse(128, 140, 105, 26, -0.3, 0, 7); x.stroke(); }, 2.05);
+    poster('La Lune', x => { x.fillStyle = '#d8d8e4'; x.beginPath(); x.arc(128, 140, 70, 0, 7); x.fill(); x.fillStyle = '#b4b4c8'; [[100, 120, 14], [150, 160, 20], [140, 105, 9], [105, 175, 11]].forEach(([a, b, r]) => { x.beginPath(); x.arc(a, b, r, 0, 7); x.fill(); }); }, 1.15);
+    poster('Mars', x => { x.fillStyle = '#e0643a'; x.beginPath(); x.arc(128, 140, 66, 0, 7); x.fill(); x.fillStyle = '#ffffff'; x.beginPath(); x.ellipse(128, 80, 26, 9, 0, 0, 7); x.fill(); }, -1.15);
+    // le grand télescope
+    const mount = new THREE.Group(); mount.position.set(0, 0, -1.6); g.add(mount);
+    add(new THREE.CylinderGeometry(1.0, 1.2, 0.5, 24), ph(0x7b6cc8), 0, 0.25, 0, mount);
+    add(new THREE.CylinderGeometry(0.28, 0.36, 2.0, 16), ph(0x3a3550), 0, 1.4, 0, mount);
+    [-1, 1].forEach(sd => box(0.12, 0.9, 0.5, ph(0x3a3550), sd * 0.62, 2.45, 0, mount));
+    const tube = new THREE.Group(); tube.position.y = 2.5; tube.rotation.x = -0.82; mount.add(tube);
+    add(new THREE.CylinderGeometry(0.5, 0.62, 4.6, 24), ph(0x2a4cc8, 100), 0, 0.4, 0, tube);
+    [-1.6, -0.2, 1.2, 2.55].forEach(y2 => add(new THREE.TorusGeometry(0.6, 0.07, 8, 24), ph(0xffc928, 140), 0, y2, 0, tube).rotation.x = Math.PI / 2);
+    add(new THREE.CircleGeometry(0.5, 24), new THREE.MeshBasicMaterial({ color: 0x9fe6ff }), 0, 2.71, 0, tube).rotation.x = -Math.PI / 2;
+    const eye = add(new THREE.CylinderGeometry(0.12, 0.16, 0.6, 12), ph(0x1c1c2a), 0, -1.95, 0.32, tube); eye.rotation.x = 0.9;
+    add(new THREE.CylinderGeometry(0.85, 0.85, 0.3, 20), ph(0xc9a06a, 30), 0, 0.15, 1.75, mount); // marchepied
+    const lens = new THREE.Sprite(new THREE.SpriteMaterial({ map: DOT, color: 0x9fe6ff, transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending })); lens.scale.setScalar(1.6); lens.position.set(0, 2.9, 0); tube.add(lens);
+    O.lens = lens;
+    // le comptoir des billets et son vendeur
+    const desk = new THREE.Group(); desk.position.set(-3.3, 0, 1.4); desk.rotation.y = Math.PI / 2; g.add(desk);
+    box(2.6, 1.0, 0.8, M(0x8a5a3a), 0, 0.5, 0, desk); box(2.8, 0.1, 1.0, M(0xc98f55), 0, 1.05, 0, desk);
+    box(2.62, 0.18, 0.82, M(0x7b6cc8), 0, 0.9, 0.0, desk);
+    const signT = canvasTex(512, 160, (x, w, h) => { x.fillStyle = '#2a3c8f'; x.fillRect(0, 0, w, h); x.strokeStyle = '#ffd23f'; x.lineWidth = 8; x.strokeRect(4, 4, w - 8, h - 8); x.fillStyle = '#ffd23f'; x.textAlign = 'center'; x.font = 'bold 44px Nunito, sans-serif'; x.fillText('Billets du télescope', w / 2, 66); x.fillStyle = '#ffffff'; x.font = 'bold 34px Nunito, sans-serif'; x.fillText(PRICE + ' anneaux · ' + VIEW + ' secondes', w / 2, 122); });
+    [-1.2, 1.2].forEach(px => add(new THREE.CylinderGeometry(0.05, 0.05, 1.5, 8), ph(0xffd23f), px, 1.8, -0.5, desk));
+    add(new THREE.PlaneGeometry(2.5, 0.78), new THREE.MeshBasicMaterial({ map: signT }), 0, 2.45, -0.48, desk);
+    // rouleau de billets sur le comptoir
+    add(new THREE.CylinderGeometry(0.14, 0.14, 0.3, 14), M(0xff8ac2), 0.8, 1.27, 0.1, desk).rotation.z = Math.PI / 2;
+    // bibliothèque, globe et planétaire qui tourne
+    const shelf = new THREE.Group(); shelf.position.set(3.7, 0, 2.6); shelf.rotation.y = -2.2; g.add(shelf);
+    box(2.0, 2.4, 0.5, M(0x8a5a3a), 0, 1.2, 0, shelf);
+    [0.5, 1.2, 1.9].forEach((y2, r) => { for (let k = 0; k < 8; k++) box(0.18, 0.45, 0.32, M([0xff5d73, 0x53b8ff, 0xffd23f, 0x7fe0a8, 0xb48cff][(k + r * 2) % 5]), -0.75 + k * 0.21, y2 + 0.25, 0.12, shelf); });
+    const orr = new THREE.Group(); orr.position.set(3.6, 0, -2.2); g.add(orr);
+    add(new THREE.CylinderGeometry(0.35, 0.45, 1.0, 14), M(0x7b6cc8), 0, 0.5, 0, orr);
+    add(new THREE.SphereGeometry(0.22, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffd23f }), 0, 1.35, 0, orr);
+    const arms = [[0.45, 0x9fe6ff, 0.07, 1.6], [0.72, 0x53b8ff, 0.1, 1.0], [1.0, 0xe0643a, 0.08, 0.7], [1.28, 0xe8c27a, 0.13, 0.45]].map(([r, c, sz, sp]) => {
+      const a = new THREE.Group(); a.position.y = 1.35; orr.add(a); add(new THREE.CylinderGeometry(0.012, 0.012, r, 4), ph(0xffd23f), r / 2, 0, 0, a).rotation.z = Math.PI / 2;
+      add(new THREE.SphereGeometry(sz, 12, 10), ph(c), r, 0, 0, a); return [a, sp]; });
+    O.ticks.push(dt => arms.forEach(([a, sp]) => a.rotation.y += dt * sp));
+    const globe = new THREE.Group(); globe.position.set(-3.8, 0, -2.6); g.add(globe);
+    add(new THREE.CylinderGeometry(0.06, 0.25, 0.9, 10), ph(0x8a5a3a, 20), 0, 0.45, 0, globe);
+    const gl = add(new THREE.SphereGeometry(0.42, 18, 14), ph(0x3f8cff), 0, 1.3, 0, globe);
+    add(new THREE.TorusGeometry(0.48, 0.03, 6, 24), ph(0xffd23f), 0, 1.3, 0, globe).rotation.y = Math.PI / 2;
+    O.ticks.push(dt => gl.rotation.y += dt * 0.5);
+    // tapis, porte et lumière chaude
+    add(new THREE.CircleGeometry(1.0, 24).rotateX(-Math.PI / 2), M(0xff8ac2), 0, 0.03, RR - 1.3);
+    box(1.4, 2.3, 0.1, M(0x6b4630), 0, 1.15, RR - 0.06); add(new THREE.CircleGeometry(0.7, 16, 0, Math.PI), M(0x6b4630), 0, 2.3, RR - 0.07).rotation.y = Math.PI;
+    const lamp = new THREE.PointLight(0xffe2b0, 1.15, 16); lamp.position.set(0, 3.9, 0.8); g.add(lamp);
+    const lamp2 = new THREE.PointLight(0x9fe6ff, 0.5, 9); lamp2.position.set(0, 3.2, -2.4); g.add(lamp2);
+    g.traverse(m => { if (m.isMesh) m.userData.noSee = true; });
+    // sol, murs et meubles pour les collisions
+    O.plat = { kind: 'cyl', x: C.x, z: C.z, r: RR, top: C.y, group: g, dx: 0, dy: 0, dz: 0, ghost: true, bare: true };
+    L.plats.push(O.plat);
+    const n = 48; for (let k = 0; k < n; k++) { const a0 = k / n * Math.PI * 2, a1 = (k + 1) / n * Math.PI * 2, r = RR - 0.25;
+      O.fences.push({ ax: C.x + Math.cos(a0) * r, az: C.z + Math.sin(a0) * r, bx: C.x + Math.cos(a1) * r, bz: C.z + Math.sin(a1) * r, y: C.y }); }
+    L.fences.push(...O.fences);
+    O.solids = [{ x: C.x, z: C.z - 1.6, hw: 1.15, hd: 1.15, y0: C.y - 0.5, y1: C.y + 3 }, { x: C.x - 3.3, z: C.z + 1.4, hw: 0.45, hd: 1.35, y0: C.y - 0.5, y1: C.y + 2 },
+      { x: C.x + 3.6, z: C.z - 2.2, hw: 0.5, hd: 0.5, y0: C.y - 0.5, y1: C.y + 2 }, { x: C.x - 3.8, z: C.z - 2.6, hw: 0.35, hd: 0.35, y0: C.y - 0.5, y1: C.y + 2 }, { x: C.x + 3.7, z: C.z + 2.6, hw: 1.0, hd: 1.0, y0: C.y - 0.5, y1: C.y + 3 }];
+    L.solids.push(...O.solids);
+    // le vendeur : le professeur Lunette
+    const m = makeVillager(VPAL[7]);
+    const vp = new V3(C.x - 4.15, C.y, C.z + 1.4);
+    const v = Object.assign(m, { name: 'Professeur Lunette', pos: vp.clone(), a: vp.clone(), b: vp.clone(), y: C.y, toB: true, wait: 0, yaw: Math.PI / 2, fixed: true, merchant: '', shopArmed: false, shopDelay: 0, cool: 0, bubbleT: 0, line: '', walkT: 0, hidden: false, role: '', lineK: 0, healReady: true,
+      lines: ['Bienvenue dans mon observatoire ! Tu veux un billet pour le télescope ?', 'Ce soir, on voit très bien Saturne et ses anneaux.', 'Psst… il paraît qu’un petit vaisseau passe parfois devant la lunette !', 'La lune est mon astre préféré. Elle sourit toujours.'] });
+    v.root.position.copy(v.pos); L.group.add(v.root); L.group.add(v.shadow); L.villagers.push(v); O.v = v;
+    // les endroits où l'on peut agir
+    O.spots = [
+      { x: C.x - 2.35, z: C.z + 1.4, r: 1.3, y: C.y, label: () => O.ticket ? 'Billet en poche !' : 'Acheter un billet · ' + PRICE + ' anneaux', fn: buy },
+      { x: C.x, z: C.z + 0.55, r: 1.25, y: C.y, label: () => O.ticket ? 'Regarder dans le télescope' : 'Le télescope (il faut un billet)', fn: useScope },
+      { x: C.x, z: C.z + RR - 1.1, r: 1.1, y: C.y, label: 'Sortir de l’Observatoire', fn: exit },
+    ];
+    L.spots = (L.spots || []).concat(O.spots);
+  }
+  function teardown() {
+    if (!O.g) return;
+    scene.remove(O.g); O.g.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); O.g = null;
+    if (L) {
+      L.plats = L.plats.filter(q => q !== O.plat); L.fences = L.fences.filter(f => !O.fences.includes(f)); L.solids = L.solids.filter(s => !O.solids.includes(s));
+      if (L.spots) L.spots = L.spots.filter(sp => !O.spots.includes(sp));
+      if (O.v) { L.villagers = L.villagers.filter(v => v !== O.v); L.group.remove(O.v.root); L.group.remove(O.v.shadow); }
+    }
+    O.v = null; O.plat = null; O.fences = []; O.solids = []; O.spots = []; O.ticks = [];
+  }
+  function enter() {
+    if (!L.obsDoor || O.inside) return;
+    transition(() => {
+      build(); O.inside = true;
+      P.pos.set(C.x, C.y, C.z + RR - 1.7); P.facing = Math.PI; P.vel.set(0, 0, 0); P.grounded = true; P.ground = O.plat; pet.place();
+      camYaw = camYawTarget = 0.35; camPitch = camPitchTarget = 0; camPos.set(C.x + 4, C.y + 8, C.z + 10); camLook.set(C.x, C.y + 1, C.z);
+      setTimeout(() => { if (O.v && O.inside) vSay(O.v, 'Bienvenue à l’Observatoire ! Pour ' + PRICE + ' anneaux, je te prête le grand télescope pendant ' + VIEW + ' secondes.', 4.4); }, 900);
+      if (O.firstIn) { O.firstIn = false; guide.say('obs-in', [['excited', 'Waouh ! L’intérieur de l’Observatoire !'], ['warm', 'Le professeur vend des billets pour regarder dans le grand télescope.']], { prio: 2 }); }
+    });
+    tone(520, 660, 0.12, 'sine', 0.05); tone(660, 880, 0.12, 'sine', 0.05, 0.12);
+  }
+  function exit() {
+    transition(() => {
+      teardown(); O.inside = false; // le billet acheté reste valable
+      const d = L.obsDoor; P.pos.set(d.x, d.y, d.z); P.facing = d.rot; P.vel.set(0, 0, 0); P.grounded = true; P.lastSafe.copy(P.pos); pet.place();
+      camYaw = camYawTarget = d.rot; camPitch = camPitchTarget = 0; camFocus.copy(P.pos);
+      camPos.set(d.x + Math.sin(d.rot) * 7, d.y + 4, d.z + Math.cos(d.rot) * 7); camLook.set(d.x, d.y + 1, d.z);
+    });
+  }
+  function buy() {
+    const v = O.v; if (!v) return;
+    if (O.ticket) { vSay(v, 'Tu as déjà ton billet ! Monte vite sur le marchepied du télescope.', 3.4); return; }
+    if (shopData.wallet < PRICE) { vSay(v, 'Oh, il te faut ' + PRICE + ' anneaux pour un billet. Ramasse-en encore quelques-uns et reviens me voir !', 4); tone(300, 200, 0.2, 'triangle', 0.05); return; }
+    shopData.wallet -= PRICE; storeShop(); cloudPush(); updateHud(true); O.ticket = true;
+    popAbove(new V3(P.pos.x, P.pos.y, P.pos.z), 2.2, 'Billet !', 'quest-pop');
+    [784, 988, 1175].forEach((f, j) => tone(f, 0, 0.14, 'sine', 0.07, j * 0.08));
+    vSay(v, 'Voilà ton billet ! Monte sur le marchepied et regarde dans la lunette : ' + VIEW + ' secondes rien que pour toi !', 4.2);
+  }
+  function useScope() {
+    if (!O.ticket) { if (O.v) vSay(O.v, 'Il te faut d’abord un billet ! Viens me voir au comptoir.', 3.2); return; }
+    O.ticket = false; transition(() => startTele());
+  }
+
+  /* ===================== la vue dans le télescope ===================== */
+  const el = $('tele'), tTime = $('teleTime'), tLabel = $('teleLabel'), tBub = $('teleBub'), tHint = $('teleHint');
+  let S = null; // la scène de l'espace (construite une seule fois)
+  const TV = { t: 0, yaw: 0, pitch: 0.32, drag: null, ship: null, labelK: '', stars: [] };
+  function planetTex(kind) {
+    return canvasTex(256, 128, (x, w, h) => {
+      if (kind === 'saturne') { for (let y = 0; y < h; y++) { const v = Math.sin(y * 0.22) * 0.5 + Math.sin(y * 0.07) * 0.5; x.fillStyle = 'rgb(' + (226 + v * 18 | 0) + ',' + (190 + v * 22 | 0) + ',' + (120 + v * 25 | 0) + ')'; x.fillRect(0, y, w, 1); } }
+      else if (kind === 'jupiter') { const cols = ['#f3d9b1', '#d9925b', '#f6e7cf', '#c97c4a', '#efd2a8', '#b9693e', '#f3e0c0']; for (let y = 0; y < h; y++) { x.fillStyle = cols[Math.floor((y / h * 7 + Math.sin(y * 0.3) * 0.15) % 7)]; x.fillRect(0, y, w, 1); } x.fillStyle = '#c8452f'; x.beginPath(); x.ellipse(170, 84, 22, 11, 0, 0, 7); x.fill(); }
+      else if (kind === 'mars') { x.fillStyle = '#d9583a'; x.fillRect(0, 0, w, h); x.fillStyle = 'rgba(120,40,30,.55)'; for (let k = 0; k < 28; k++) { x.beginPath(); x.ellipse(Math.random() * w, 20 + Math.random() * (h - 40), 6 + Math.random() * 22, 3 + Math.random() * 8, 0, 0, 7); x.fill(); } x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, 9); x.fillRect(0, h - 7, w, 7); }
+      else if (kind === 'lune') { x.fillStyle = '#d6d6e2'; x.fillRect(0, 0, w, h); for (let k = 0; k < 60; k++) { const r = 2 + Math.random() * 9, cx = Math.random() * w, cy = Math.random() * h; x.fillStyle = 'rgba(150,150,170,.7)'; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill(); x.fillStyle = 'rgba(240,240,250,.6)'; x.beginPath(); x.arc(cx - r * 0.25, cy - r * 0.25, r * 0.55, 0, 7); x.fill(); } }
+      else { const gr = x.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#5ac8ff'); gr.addColorStop(0.5, '#2f6bff'); gr.addColorStop(1, '#5ac8ff'); x.fillStyle = gr; x.fillRect(0, 0, w, h); x.fillStyle = 'rgba(255,255,255,.35)'; for (let k = 0; k < 6; k++) x.fillRect(0, 15 + k * 18 + Math.random() * 6, w, 3); }
+    });
+  }
+  function buildSpace() {
+    const sc = new THREE.Scene(); sc.background = new THREE.Color(0x050a22);
+    const cam = new THREE.PerspectiveCamera(46, innerWidth / innerHeight, 0.5, 4000); cam.rotation.order = 'YXZ';
+    sc.add(new THREE.AmbientLight(0x8890c0, 0.6)); const sun = new THREE.DirectionalLight(0xfff2dd, 1.15); sun.position.set(-1, 0.5, 0.6); sc.add(sun);
+    const dirOf = (yaw, pitch) => new V3(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
+    // étoiles : un ciel plein, avec une bande de Voie lactée
+    const mk = (n, size, band) => { const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), cc = new THREE.Color();
+      for (let k = 0; k < n; k++) { let d; if (band && Math.random() < 0.55) { const a = Math.random() * Math.PI * 2; d = new V3(Math.cos(a), 0.35 * Math.sin(a) + (Math.random() - 0.5) * 0.28, Math.sin(a) * 0.9 - 0.4).normalize(); } else d = new V3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1).normalize();
+        pos.set([d.x * 1800, d.y * 1800, d.z * 1800], k * 3); cc.set(pick([0xffffff, 0xffffff, 0xcfe4ff, 0xfff1c8, 0xffd6ec])).multiplyScalar(0.55 + Math.random() * 0.45); col.set([cc.r, cc.g, cc.b], k * 3); }
+      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size, sizeAttenuation: false, vertexColors: true, map: DOT, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); sc.add(pts); return pts; };
+    const stars = [mk(2600, 2.6 * Math.min(2, devicePixelRatio || 1), true), mk(220, 5.5 * Math.min(2, devicePixelRatio || 1), false)];
+    // nuages de couleur (nébuleuses)
+    [[0xff6fb5, -0.7, 0.55, 900], [0x6f8cff, 0.5, 0.25, 1000], [0xb48cff, 0.1, 0.85, 800], [0x53e6ff, -1.2, 0.2, 700]].forEach(([c, y2, p2, sz]) => {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: DOT, color: c, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending })); sp.position.copy(dirOf(y2, p2).multiplyScalar(1600)); sp.scale.setScalar(sz); sc.add(sp); });
+    // planètes
+    const planets = [];
+    const planet = (key, name, desc, r, yaw, pitch, dist, extra) => { const g2 = new THREE.Group(); g2.position.copy(dirOf(yaw, pitch).multiplyScalar(dist)); sc.add(g2);
+      const m = new THREE.Mesh(new THREE.SphereGeometry(r, 40, 28), new THREE.MeshLambertMaterial({ map: planetTex(key) })); m.rotation.z = 0.2; g2.add(m); if (extra) extra(g2, r);
+      planets.push({ name, desc, g: g2, m, dir: dirOf(yaw, pitch), r, dist }); };
+    planet('saturne', 'Saturne', 'la planète aux grands anneaux', 34, 0.3, 0.42, 520, (g2, r) => {
+      const rt = canvasTex(256, 256, (x, w) => { const c = w / 2; for (let k = 0; k < 60; k++) { const rr = c * (0.56 + k / 60 * 0.44); x.strokeStyle = 'rgba(' + (230 - k % 7 * 8) + ',' + (205 - k % 5 * 10) + ',' + (150 - k % 6 * 6) + ',' + (k % 9 === 0 ? 0.15 : 0.8) + ')'; x.lineWidth = 2.2; x.beginPath(); x.arc(c, c, rr, 0, 7); x.stroke(); } });
+      const ring = new THREE.Mesh(new THREE.RingGeometry(r * 1.3, r * 2.3, 72), new THREE.MeshBasicMaterial({ map: rt, side: THREE.DoubleSide, transparent: true }));
+      const uv = ring.geometry.attributes.uv, pp = ring.geometry.attributes.position; for (let k = 0; k < uv.count; k++) uv.setXY(k, pp.getX(k) / (r * 4.6) + 0.5, pp.getY(k) / (r * 4.6) + 0.5);
+      ring.rotation.x = Math.PI / 2 - 0.42; ring.rotation.y = 0.2; g2.add(ring); });
+    planet('jupiter', 'Jupiter', 'la plus grosse planète, avec sa tache rouge', 46, -0.42, 0.6, 660);
+    planet('mars', 'Mars', 'la planète rouge', 15, -0.06, 0.17, 340);
+    planet('lune', 'La Lune', 'elle tourne autour de la Terre', 26, -0.78, 0.18, 300, (g2, r) => {
+      // la lune sourit aux enfants
+      const sm = new THREE.Mesh(new THREE.TorusGeometry(r * 0.32, r * 0.035, 6, 16, Math.PI), new THREE.MeshBasicMaterial({ color: 0x8a8aa0 })); sm.position.set(0, -r * 0.12, r * 0.98); sm.rotation.z = Math.PI; g2.add(sm);
+      [-1, 1].forEach(sd => { const e = new THREE.Mesh(new THREE.SphereGeometry(r * 0.06, 8, 6), new THREE.MeshBasicMaterial({ color: 0x6a6a80 })); e.position.set(sd * r * 0.22, r * 0.2, r * 0.96); g2.add(e); });
+      g2.lookAt(0, 0, 0); });
+    planet('neptune', 'Neptune', 'une planète toute bleue, très très loin', 20, 0.78, 0.78, 720);
+    // le petit robot dans son vaisseau
+    const ship = new THREE.Group(); sc.add(ship);
+    const hull = new THREE.Mesh(new THREE.SphereGeometry(3.2, 32, 18), new THREE.MeshPhongMaterial({ color: 0xcfd7ee, shininess: 120, specular: 0xffffff })); hull.scale.set(1, 0.32, 1); ship.add(hull);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(3.15, 0.32, 10, 36), new THREE.MeshPhongMaterial({ color: 0x7b6cc8, shininess: 90 })); rim.rotation.x = Math.PI / 2; ship.add(rim);
+    const bulbs = Array.from({ length: 10 }, (_, k) => { const a = k / 10 * Math.PI * 2, b = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), new THREE.MeshBasicMaterial({ color: [0xffd23f, 0xff5d73, 0x53e6ff][k % 3] })); b.position.set(Math.cos(a) * 3.15, 0, Math.sin(a) * 3.15); ship.add(b); return b; });
+    const bot = makeRobot({ white: 0xfff1e2, accent: 0xff8a3d, glow: 0xffd23f }); bot.root.scale.setScalar(2.3); bot.root.position.y = 0.2; ship.add(bot.root);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(2.0, 24, 14, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x9fe6ff, transparent: true, opacity: 0.28, shininess: 160, specular: 0xffffff, depthWrite: false })); dome.position.y = 0.6; dome.scale.y = 1.35; ship.add(dome);
+    const jet = new THREE.Mesh(new THREE.ConeGeometry(1.0, 2.6, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0x53e6ff, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending })); jet.position.y = -1.9; jet.rotation.x = Math.PI; ship.add(jet);
+    ship.visible = false;
+    // étoiles filantes
+    const shooters = Array.from({ length: 3 }, () => { const geo = new THREE.BufferGeometry().setFromPoints([new V3(), new V3()]); const ln = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 })); sc.add(ln); return { ln, geo, t: 99, a: new V3(), v: new V3() }; });
+    sc.add(cam);
+    return { sc, cam, stars, planets, ship, bot, bulbs, jet, shooters, dirOf };
+  }
+  function startTele() {
+    if (!S) S = buildSpace();
+    O.tele = true; O.lock = true; TV.t = 0; TV.yaw = 0; TV.pitch = 0.3; TV.labelK = ''; TV.ship = null; TV.coucou = false; TV.shootT = 1.5;
+    S.ship.visible = false; tBub.hidden = true; tLabel.textContent = ''; tHint.hidden = false;
+    el.hidden = false; document.body.classList.add('tele-on'); if (O.v) O.v.bubbleT = 0; $('hud').hidden = true; $('touch').hidden = true; $('actBtn').hidden = true; setMuffled(true);
+    [523, 659, 784, 1047, 1319].forEach((f, j) => tone(f, 0, 0.35, 'sine', 0.05, j * 0.09));
+    if (O.firstView) { O.firstView = false; guide.say('tele-1', [['excited', 'Regarde toutes ces étoiles ! Glisse ton doigt pour déplacer le télescope.']], { scope: 'always', prio: 3 }); }
+  }
+  function stopTele() {
+    if (!O.tele) return;
+    transition(() => {
+      O.tele = false; el.hidden = true; document.body.classList.remove('tele-on'); tBub.hidden = true; $('hud').hidden = false; $('touch').hidden = !isTouch; setMuffled(false);
+      if (O.v) setTimeout(() => { if (O.v && O.inside) vSay(O.v, 'Alors, c’était beau ? Tu as vu le petit vaisseau ? Reviens quand tu veux !', 3.8); }, 700);
+    });
+  }
+  function updateTele(dt) {
+    const t = (TV.t += dt), left = Math.max(0, VIEW - t);
+    tTime.textContent = '0:' + String(Math.ceil(left)).padStart(2, '0');
+    tTime.classList.toggle('low', left < 6);
+    // déplacer le télescope : clavier, manette, joystick
+    let ix = 0, iy = 0;
+    if (keys.ArrowLeft || keys.KeyA || keys.KeyQ) ix -= 1; if (keys.ArrowRight || keys.KeyD) ix += 1;
+    if (keys.ArrowUp || keys.KeyW || keys.KeyZ) iy += 1; if (keys.ArrowDown || keys.KeyS) iy -= 1;
+    if (Math.abs(padCamX) > 0.2) ix += padCamX; if (Math.abs(padCamY) > 0.2) iy -= padCamY;
+    TV.yaw -= ix * dt * 0.8; TV.pitch += iy * dt * 0.6;
+    TV.yaw = THREE.MathUtils.clamp(TV.yaw, -1.5, 1.5); TV.pitch = THREE.MathUtils.clamp(TV.pitch, -0.12, 1.25);
+    const cam = S.cam; cam.rotation.set(TV.pitch, TV.yaw, 0); if (Math.abs(cam.aspect - innerWidth / innerHeight) > 0.001) { cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); }
+    S.stars[1].material.opacity = 0.75 + Math.sin(T * 3) * 0.25;
+    S.planets.forEach((p, k) => { p.m.rotation.y += dt * (0.05 + k * 0.02); });
+    // étoiles filantes
+    TV.shootT -= dt;
+    for (const sh of S.shooters) {
+      if (sh.t > 1 && TV.shootT <= 0) { TV.shootT = 2.2 + Math.random() * 2.5; sh.t = 0; const f = new V3(0, 0, -1).applyEuler(cam.rotation).multiplyScalar(900);
+        sh.a.copy(f).add(new V3(rand(-300, 300), rand(80, 300), rand(-200, 200))); sh.v.set(rand(-1, 1), -0.5, rand(-0.3, 0.3)).normalize().multiplyScalar(900); }
+      if (sh.t <= 1) { sh.t += dt * 1.4; const a = sh.a.clone().addScaledVector(sh.v, sh.t), b = a.clone().addScaledVector(sh.v, -0.18);
+        sh.geo.attributes.position.setXYZ(0, a.x, a.y, a.z); sh.geo.attributes.position.setXYZ(1, b.x, b.y, b.z); sh.geo.attributes.position.needsUpdate = true; sh.ln.material.opacity = Math.sin(Math.min(1, sh.t) * Math.PI); }
+    }
+    // le petit robot en vaisseau arrive, s'arrête devant la lunette et fait coucou
+    const sp = S.ship;
+    if (!TV.ship && t > 5) {
+      const f = new V3(0, 0, -1).applyEuler(cam.rotation), r = new V3(1, 0, 0).applyEuler(cam.rotation), u = new V3(0, 1, 0).applyEuler(cam.rotation);
+      TV.ship = { a: f.clone().multiplyScalar(120).addScaledVector(r, -130).addScaledVector(u, 20), m: f.clone().multiplyScalar(36).addScaledVector(u, -2.5), b: f.clone().multiplyScalar(220).addScaledVector(r, 190).addScaledVector(u, 90) };
+      sp.visible = true; SFX.radio('bot');
+      guide.say('tele-ship', [['excited', 'Oh ! Regarde, un petit vaisseau arrive !']], { scope: 'always', prio: 3 });
+    }
+    let showBub = false;
+    if (TV.ship) {
+      const ts = t - 5, ease = u2 => u2 <= 0 ? 0 : u2 >= 1 ? 1 : u2 * u2 * (3 - 2 * u2);
+      if (ts < 5) sp.position.lerpVectors(TV.ship.a, TV.ship.m, ease(ts / 5));
+      else if (ts < 13) { sp.position.copy(TV.ship.m); sp.position.y += Math.sin(T * 2.2) * 1.2; showBub = true; if (!TV.coucou) { TV.coucou = true; SFX.radio('bot'); [1600, 2000, 2400].forEach((f, j) => tone(f, f * 1.15, 0.09, 'sine', 0.05, 0.3 + j * 0.12)); } }
+      else if (ts < 19) sp.position.lerpVectors(TV.ship.m, TV.ship.b, ease((ts - 13) / 6));
+      else sp.visible = false;
+      sp.lookAt(cam.position); sp.rotateX(Math.PI / 2 - 0.25); sp.rotation.z += Math.sin(T * 1.7) * 0.08;
+      S.bulbs.forEach((b, k) => b.visible = Math.floor(T * 6 + k) % 3 !== 0); S.jet.material.opacity = 0.35 + Math.random() * 0.25;
+      const bt = S.bot; bt.arms[1].rotation.z = showBub ? 2.5 + Math.sin(T * 12) * 0.5 : 0.4; bt.arms[0].rotation.z = -0.3; bt.head.rotation.z = Math.sin(T * 3) * 0.12;
+      bt.eyes.forEach(e => e.scale.y = Math.sin(T * 1.1) > 0.97 ? 0.15 : 1.5);
+    }
+    if (showBub) { const p = sp.position.clone().add(new V3(0, 6, 0)).project(cam); if (p.z < 1 && Math.abs(p.x) < 1.2 && Math.abs(p.y) < 1.2) { tBub.hidden = false; tBub.style.left = ((p.x + 1) / 2 * innerWidth) + 'px'; tBub.style.top = ((1 - p.y) / 2 * innerHeight) + 'px'; } else tBub.hidden = true; } else tBub.hidden = true;
+    // le nom de ce qu'on regarde
+    const fwd = new V3(0, 0, -1).applyEuler(cam.rotation); let best = null, bd = 0.16;
+    for (const p of S.planets) { const a = fwd.angleTo(p.dir); if (a < bd) { bd = a; best = p; } }
+    if (TV.ship && sp.visible && fwd.angleTo(sp.position.clone().normalize()) < 0.2) best = { name: 'Un petit robot', desc: 'il te fait coucou depuis son vaisseau !' };
+    const lab = best ? best.name + ' — ' + best.desc : '';
+    if (lab !== TV.labelK) { TV.labelK = lab; tLabel.textContent = lab; tLabel.classList.toggle('on', !!lab); }
+    if (t > 4) tHint.hidden = true;
+    if (t >= VIEW) stopTele();
+  }
+  // glisser pour déplacer le télescope
+  el.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; TV.drag = { id: e.pointerId, x: e.clientX, y: e.clientY }; try { el.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault(); });
+  el.addEventListener('pointermove', e => { if (!TV.drag || e.pointerId !== TV.drag.id) return; const k = e.pointerType === 'mouse' ? 0.0035 : 0.005;
+    TV.yaw += (e.clientX - TV.drag.x) * k; TV.pitch += (e.clientY - TV.drag.y) * k; TV.drag.x = e.clientX; TV.drag.y = e.clientY; tHint.hidden = true; });
+  const dragEnd = e => { if (TV.drag && e.pointerId === TV.drag.id) TV.drag = null; };
+  el.addEventListener('pointerup', dragEnd); el.addEventListener('pointercancel', dragEnd);
+  $('teleQuit').onclick = e => { e.stopPropagation(); stopTele(); };
+  addEventListener('keydown', e => { if (O.tele && e.code === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); stopTele(); } }, true);
+
+  /* ===================== boucle ===================== */
+  function update(dt) {
+    if (O.fadeDir === 1) { O.fade += dt * 2.8; setFade(O.fade); if (O.fade >= 1) { O.fade = 1; const f = O.after; O.after = null; if (f) f(); O.fadeDir = -1; } }
+    else if (O.fadeDir === -1) { O.fade -= dt * 2.4; setFade(O.fade); if (O.fade <= 0) { O.fade = 0; setFade(0); O.fadeDir = 0; O.lock = O.tele; } }
+    if (O.inside) { O.ticks.forEach(f => f(dt)); if (O.lens) O.lens.material.opacity = 0.45 + Math.sin(T * 3) * 0.2;
+      if (O.v) { O.v.arms[1].rotation.z = O.v.bubbleT > 0 ? 2.2 + Math.sin(T * 9) * 0.35 : 0.2; } }
+    if (O.tele && state === 'play' && O.fadeDir !== 1) updateTele(dt);
+  }
+  // caméra de la pièce : vue plongeante qui tourne autour de l'Observatoire (glisser pour tourner)
+  function camera_(dt) {
+    if (!O.inside || O.tele) return false;
+    const yaw = camYaw, el2 = THREE.MathUtils.clamp(0.72 + camPitch * 0.6, 0.35, 1.25), dist = camera.aspect < 0.85 ? 15.5 : 12.5;
+    const fx = C.x + (P.pos.x - C.x) * 0.45, fz = C.z + (P.pos.z - C.z) * 0.45;
+    tmpV.set(fx + Math.sin(yaw) * Math.cos(el2) * dist, C.y + 1 + Math.sin(el2) * dist, fz + Math.cos(yaw) * Math.cos(el2) * dist);
+    const k = 1 - Math.exp(-dt * 6); camPos.lerp(tmpV, k); camLook.lerp(tmpL.set(fx, C.y + 1.2, fz), k);
+    camFocus.copy(P.pos); camera.position.copy(camPos); camera.lookAt(camLook); sky.position.copy(camera.position);
+    return true;
+  }
+  function render() { renderer.render(S.sc, S.cam); }
+  function reset() {
+    if (O.tele) { O.tele = false; el.hidden = true; document.body.classList.remove('tele-on'); tBub.hidden = true; setMuffled(false); $('hud').hidden = false; }
+    if (O.inside) { teardown(); O.inside = false; }
+    O.lock = false; O.fadeDir = 0; O.fade = 0; O.after = null; setFade(0); O.ticket = false;
+  }
+  return { update, camera: camera_, render, reset, enter, exit, stopTele, get inside() { return O.inside; }, get lock() { return O.lock; }, get tele() { return O.tele && !!S; } };
+})();
+
 /* ---------- Bande-annonce (tournée en direct dans le moteur du jeu) ---------- */
 const trailer = (() => {
   const el = $('trailer'), tText = $('tText'), tLogo = $('tLogo'), tFade = $('tFade');
@@ -7590,7 +8316,7 @@ function frame(now) {
     T += dt; L.t += dt;
     updateMovers(dt);
     const live = state === 'play';
-    if (live) { const inp = readInput(); if (feed.on || cakeCine.on || questCine() || lila.cine || world.cine) { inp.x = inp.z = 0; inp.jump = inp.jumpPressed = false; } if (!lila.lockPhys && !world.lock) updatePlayer(dt, inp); if (state === 'play') updateHints(dt, inp); }
+    if (live) { const inp = readInput(); if (feed.on || cakeCine.on || questCine() || lila.cine || world.cine) { inp.x = inp.z = 0; inp.jump = inp.jumpPressed = false; } if (seat.on && (Math.hypot(inp.x, inp.z) > 0.3 || inp.jumpPressed)) standUp(); if (!lila.lockPhys && !world.lock && !obs.lock && !seat.on) updatePlayer(dt, inp); if (state === 'play' && !obs.tele) updateHints(dt, inp); }
     else if (state === 'clear') { P.vel.x *= 0.9; P.vel.z *= 0.9; }
     else if (state === 'title') readInput();
     else if (state === 'trailer') trailer.update(dt);
@@ -7599,7 +8325,7 @@ function frame(now) {
     else if (state === 'custom') { P.vel.set(0, 0, 0); if (!custDrag) custYaw *= Math.exp(-dt * 1.5); P.facing = Math.PI + custYaw + Math.sin(T * 0.7) * 0.35; }
     if (state === 'title' || state === 'over' || state === 'end') { if (P.grounded && P.ground && P.ground.move) { P.pos.x += P.ground.dx; P.pos.y += P.ground.dy; P.pos.z += P.ground.dz; } }
     animateRobot(dt, state === 'clear' || (state === 'trailer' && trailer.celebrate)); updateFeeding(dt); updateCakeCine(dt);
-    pip.update(dt); pet.update(dt); lila.update(dt); world.update(dt);
+    pip.update(dt); pet.update(dt); lila.update(dt); world.update(dt); obs.update(dt);
     updateDayNight(dt, state === 'play' || state === 'cine' || state === 'title' || state === 'over' || state === 'end');
     updateVillagers(dt);
     const safe = cakeCine.on || feed.on || questCine() || lila.on || world.cine || world.busy; // pendant un cadeau ou un repas, personne ne peut te faire mal
@@ -7611,7 +8337,7 @@ function frame(now) {
   }
   updatePetNeeds(Math.min((now - (frame.lastN || now)) / 1000, 0.1)); frame.lastN = now;
   updateSee(); updatePetFeedBubble(); updateQuestUI();
-  renderer.render(scene, camera);
+  if (obs.tele) obs.render(); else renderer.render(scene, camera);
 }
 
 /* ---------- Écran du studio F.S.M Game House ---------- */
