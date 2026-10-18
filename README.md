@@ -1,107 +1,95 @@
-# Prairie Orbitale
+# Aegis Protocol : Épervier
 
-Jeu de plateforme 3D pour enfants : un petit robot explore des îles flottantes, ramasse des anneaux, aide les habitants, prépare des gâteaux et s'occupe de son animal.
+Simulation de drone **MALE** armé (Medium Altitude Long Endurance) — vous êtes l’**opérateur capteurs** du drone **ÉPERVIER**.
 
-**Version 8.2**
+**Version 2.8** · F.S.M Game House
+
+> Ancien dépôt *Le-Jardin-Clos* / *Prairie Orbitale* : le code a été entièrement remplacé par ce jeu de drone (moteur issu de *Naval Strike Simulation* / *Darksea*).
 
 ## Jouer
 
-Ouvre `index.html` dans un navigateur récent. Tout le jeu tient dans ce seul fichier : la bibliothèque 3D (three.js r128) est intégrée, il n'y a donc rien à installer et le jeu se lance même sans connexion (seules les polices Google Fonts demandent Internet, le jeu a des polices de secours).
+Ouvre `index.html` dans un navigateur récent **avec WebGL2** (Chrome, Edge, Firefox, Safari récents).  
+Tout le jeu tient dans ce seul fichier : aucun serveur, aucune installation.
 
 ### Mettre le jeu en ligne avec GitHub Pages
 
-1. Envoie ces fichiers à la racine d'un dépôt GitHub.
-2. Dans le dépôt : **Settings → Pages**.
-3. Dans **Source**, choisis **Deploy from a branch**, puis la branche `main` et le dossier `/ (root)`.
-4. Après une minute, le jeu est accessible à l'adresse `https://<ton-nom>.github.io/<nom-du-dépôt>/`.
+1. Les fichiers sont déjà à la racine de ce dépôt.
+2. **Settings → Pages** → Source : *Deploy from a branch* → branche `main` → dossier `/ (root)`.
+3. Après une minute : `https://wwwh8hv4w5-lang.github.io/Le-Jardin-Clos/`
 
-## Commandes
+## Concept
 
-| Action | Clavier | Tactile | Manette |
-|---|---|---|---|
-| Se déplacer | Z Q S D ou flèches | Pouce gauche | Stick gauche / croix |
-| Sauter | Espace | Bouton Saut | A |
-| Planer | Maintenir Espace en l'air | Maintenir Saut | Maintenir A |
-| Tourner la caméra | J / L ou glisser la souris | Glisser à droite | Stick droit (gauche/droite) |
-| Incliner la caméra | U / O ou glisser la souris vers le haut/bas | Glisser à droite vers le haut/bas | Stick droit (haut/bas) |
-| Recentrer la caméra | K | Double-tap à droite | Clic du stick droit |
-| S’envoler | Marcher dans un tourbillon ou sur un nuage rose, puis se diriger | idem | idem |
-| S’asseoir / entrer | Bouton d’action près d’un banc ou d’une porte | idem | idem |
-| Recentrage automatique | Se fait seul en marchant · réglable dans Pause ou sur l’écran titre (« Caméra auto ») | idem | idem |
-| Sac | B ou I | Bouton sac | — |
-| Pause | Échap ou P | Bouton pause | Start |
+Vous pilotez la **boule optronique** (TV · IR · illumination laser) d’un drone en orbite (~4 500 m).  
+L’état-major (**AQUILA**) vous donne des ordres. Vous devez :
 
-## Sauvegarde
+1. **Observer** le terrain (routes, villages, convois, civils, forces hostiles)
+2. **Identifier** les cibles (zoom fort, centrage, PID)
+3. Demander une **autorisation de tir** (règles d’engagement, CDE — dommages collatéraux estimés)
+4. **Désigner au laser** et frapper (MAS-L, BGL-250 / BGL-1000, canon selon charge)
+5. **Dévier** si des civils entrent dans la zone pendant le vol de la munition
 
-Sur GitHub Pages (ou en ouvrant le fichier directement), la partie est enregistrée dans le navigateur de l'appareil. La sauvegarde en ligne entre appareils ne fonctionne que dans la version publiée comme artefact Claude.
+## Missions
 
-## Nouveautés de la 8.2 — iPhone et iPad
+| Code | Titre | Ambiance |
+|------|--------|----------|
+| ÉPERVIER 1 | Vent de sable | Désert, convoi armé, hameau civil interdit de tir |
+| ÉPERVIER 2 | Lisière | Danger close, amis au contact, JTAC |
+| ÉPERVIER 3 | Médina | Ville dense, marché, CDE stricte |
+| ÉPERVIER 4 | Nuit noire | Opération de nuit |
+| ÉPERVIER 5 | Fer de lance | Objectif prioritaire / camion d’armes |
+| PATROUILLE | Patrouille libre | Mode libre |
 
-- Le jeu a été vérifié sur des écrans d'iPhone (13, SE, en portrait et en paysage) et d'iPad (en portrait).
-- L'entrée et la sortie de l'Observatoire ne figent plus le jeu : la pièce n'ajoute plus de lampe, qui obligeait Safari à recalculer tout l'éclairage.
-- Sur les petits écrans (iPhone SE), le nom de l'île ne chevauche plus le compteur d'anneaux, et l'astuce de caméra ne gêne plus le joystick.
-- L'astuce de caméra devient « Glisser pour regarder ».
+Campagne sauvegardée en localStorage (`aegisEpervierCampaign_v1`).
 
-## Nouveautés de la 8.1
+## Commandes principales
 
-**L'Observatoire des Nuages se visite**
-- À l'intérieur, on trouve le Professeur Lunette, la grande lunette, un planétaire qui tourne, un globe et des affiches du ciel.
-- Pour 8 anneaux, le professeur vend un billet qui donne droit à 30 secondes dans le télescope.
-- Dans le télescope, on fait glisser le doigt pour regarder les étoiles, les étoiles filantes, Saturne, Jupiter, Mars, la Lune et Neptune.
-- Un petit robot passe en vaisseau spatial et fait coucou.
+| Action | Souris / tactile | Clavier |
+|--------|------------------|---------|
+| Orienter la boule (slew) | Glisser sur l’image | — |
+| Zoomer | Molette / pincer | — |
+| Pointer la carte | Toucher la carte | — |
+| Sélectionner une cible | Clic / toucher | — |
+| Poursuivre (track) | Double-clic | — |
+| Identifier | Bouton **IDENTIFIER** | — |
+| Laser | Bouton **LASER** | `L` |
+| Tir (maintenir) | Bouton **TIR** | — |
+| Déviation | Bouton **DÉVIATION** | — |
+| Vision TV / IR | Boutons de mode | `V` |
+| Pause | — | `Échap` / `P` |
 
-**Les bancs**
-- Les bancs sont solides : on ne passe plus au travers.
-- On peut s'asseoir dessus avec le bouton « S'asseoir ». Pour se relever, on bouge, on saute, ou on appuie sur « Se lever ».
+Interface pensée pour desktop et mobile (HUD fire-control, carte 2D, briefings).
 
-**Corrections**
-- Le décor ne devient plus transparent : la caméra se tourne et s'incline librement.
-- Les îles de décor lointaines n'apparaissent plus au milieu du parcours, par exemple au-dessus du phare.
+## Armement (selon drone / mission)
 
-## Nouveautés de la 8.0 — la grande mise à jour des Îles Flottantes
+- **MAS-L** — missile air-sol léger (guidage laser)
+- **BGL-250** / **BGL-1000** — bombes guidées laser
+- **Canon** rotatif (selon charge)
+- Modes : designation laser, caméra munition (autodirecteur), déviation en zone vide
 
-**Un archipel à explorer**
-- Les îles ont des formes arrondies, avec des avancées, et plusieurs îlots flottent dans le ciel.
-- Le chemin principal reste entièrement faisable à pied grâce aux ponts à barrières.
-- Les chemins secondaires passent par le ciel : tourbillons de vent, nuages rebondissants, passerelle suspendue et plateforme-navette.
+Plusieurs variantes de drone (polyvalent, salve, vision sous canopée, etc.) avec hangar et loadout.
 
-**De nouveaux lieux**
-- L'Observatoire des Nuages, avec sa coupole qui tourne, sa grande lunette, son trésor et Stella l'astronome.
-- Une cascade qui tombe dans le vide, sous un arc-en-ciel.
-- Le petit phare des nuages, avec sa lumière qui tourne.
-- L'îlot du petit robot perdu, dans le ciel, et un îlot-trésor dans les nuages.
+## Technique
 
-**Trois nouvelles quêtes**
-- Gaston et son carillon à vent.
-- Rosa et le premier vol de ses oisillons.
-- Félix et sa montgolfière miniature.
+- Rendu **WebGL2** (moteur custom issu de Naval Strike 3.1 / protocole Aegis)
+- Échelle : 1 unité ≈ 10 m
+- Drone en orbite (rayon ~380 u, altitude ~450 u)
+- Monde généré par mission (terrain, routes, bâtiments, végétation, IA véhicules / personnes)
+- Cycle jour / nuit, météo, vision TV / IR, ombres centrées sur la visée
+- Sauvegarde campagne navigateur
 
-**Une nouvelle mécanique : le vent**
-- On marche dans un tourbillon qui brille : il emporte le robot tout là-haut.
-- Les nuages roses font rebondir le robot.
-- Ensuite, le vent le porte : il plane tout seul, il n'y a qu'à se diriger.
-- Quand on vole, on peut passer au-dessus des barrières et atterrir sur une île depuis l'extérieur.
-- Les barrières empêchent toujours de tomber en marchant.
-- Pip explique tout la première fois.
+## Fichiers
 
-## Nouveautés de la 7.10
-
-- Console propre : suppression des avertissements « flatShading » de three.js qui s’affichaient en boucle (aucun changement visuel).
-
-## Nouveautés de la 7.9
-
-- Recentrage automatique de la caméra : quand le robot avance et qu'on ne touche pas à la caméra pendant un instant, elle revient doucement se placer derrière lui et retrouve sa hauteur normale.
-- Elle ne fait jamais de demi-tour brusque quand le robot revient vers la caméra, et tourne lentement quand il marche de côté.
-- Dès qu'on manipule la caméra (souris, doigt, J/L/U/O, stick droit), le recentrage se met en pause.
-- Option « Caméra auto » sur l'écran titre et « Recentrage auto : oui / non » dans le menu Pause (le choix est mémorisé).
-
-## Nouveautés de la 7.8
-
-- La caméra s'incline maintenant aussi de haut en bas : vue d'en haut ou vue rasante, à la souris, au doigt, au clavier (U / O) ou à la manette.
-- La hauteur de caméra revient au cadrage normal en recentrant et au début de chaque niveau.
+| Fichier | Rôle |
+|---------|------|
+| `index.html` | Jeu complet (UI + moteur 3D + missions + IA) |
+| `README.md` | Ce document |
 
 ## Crédits
 
-- Jeu : F.S.M Game House
-- Moteur 3D : [three.js](https://threejs.org) r128 — © 2010-2021 Three.js Authors, licence MIT (mention conservée dans `index.html`)
-- Polices : Lilita One et Nunito (Google Fonts, licence SIL Open Font License)
+- **Jeu** : F.S.M Game House  
+- **Moteur 3D** : base *Naval Strike Simulation 3.1* / protocole Aegis (Darksea)  
+- **Titre** : Aegis Protocol : Épervier  
+
+---
+
+*Prototype de simulation d’engagement aérien de précision. Aucun lien avec des opérations réelles.*
