@@ -1,6 +1,6 @@
 # AEGIS PROTOCOL : VAUTOUR
 
-**v0.2 « DUSTLINE »** — simulation d'opérateur de drone **MALE** : interception de drones ennemis, appui aérien rapproché et conduite d'un réseau d'escouades au sol.
+**v0.3 « LE DÉBARQUEMENT »** — simulation d'opérateur de drone **MALE** : interception de drones ennemis, appui aérien rapproché et conduite d'un réseau d'escouades au sol.
 
 Vous êtes l'**opérateur du drone VAUTOUR 09** au-dessus de la zone charnière **TALIS-V** (région de MERIK), face à l'**AVO**. · F.S.M Game House
 
@@ -80,7 +80,7 @@ Tout le jeu tient dans ce seul fichier : aucun serveur, aucune installation.
 | Réveil automatique | `P` |
 | Plein écran | `F11` |
 
-## Feuille de route v0.3 « LE DÉBARQUEMENT »
+## Feuille de route v0.4
 
 - Identification fine des cibles au sol, accompagnement rapproché des soldats au sol
 - Compte de munitions et gestion des stocks

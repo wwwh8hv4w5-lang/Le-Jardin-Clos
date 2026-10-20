@@ -2,7 +2,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Vautour">
 <meta name="theme-color" content="#04090f"><meta name="format-detection" content="telephone=no">
-<title>AEGIS PROTOCOL : VAUTOUR v0.2</title>
+<title>AEGIS PROTOCOL : VAUTOUR v0.3</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Layout : plein écran 3D ; console en verre fumé ocre sur les quatre coins, équipage en bas au centre. */
@@ -911,6 +911,12 @@ body.vt-cinema #r-panel,body.vt-cinema #rlink,body.vt-cinema #vt-crt{display:non
 .cn-open b{font-size:clamp(13px,3.6vw,24px);letter-spacing:.16em;text-wrap:balance;padding:0 16px}
 @media (max-width:700px){body.ops #rlink{bottom:calc(var(--sb) + 236px)}.vt-sub{font-size:9.5px;letter-spacing:.1em}}
 
+/* v0.3 · menus utilisables au doigt : défilement vertical autorisé, contenu jamais coupé en haut quand il dépasse l'écran */
+body.touch .vt-ov,body.touch .vt-modal,body.touch #od-list,body.touch #ops-dos{touch-action:pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.vt-ov,.vt-modal{align-items:start}
+.vt-ov>*,.vt-modal>*{margin-top:auto!important;margin-bottom:auto!important}
+@media (max-width:700px){.vt-ov>.vt-menu{margin-bottom:0!important}}
+
 body:not(.ops) #r-panel{display:none!important}
 </style></head><body>
 <div id="fsmIntro" role="dialog" aria-label="F.S.M Game House présente">
@@ -1011,7 +1017,7 @@ body:not(.ops) #r-panel{display:none!important}
       <span class="vt-eye">F.S.M GAME HOUSE · AEGIS PROTOCOL</span>
       <h1 class="vt-h1">VAUTOUR<i>09</i></h1>
       <div class="vt-sub">SURVEILLANCE · RENSEIGNEMENT · INTERVENTION</div>
-      <div class="vt-ver">VERSION 0.2</div>
+      <div class="vt-ver">VERSION 0.3</div>
       <p class="vt-lead">Opérateur capteur d’un drone armé au-dessus du désert de Kesh. Vous observez, vous comprenez, vous envoyez les bonnes forces au bon endroit. Et vous ne tirez que lorsque les hommes au sol le demandent.</p>
       <nav class="vt-nav">
         <button class="vt-b pri" id="vt-go" type="button">PRENDRE LE POSTE<small id="vt-go-s">Mission 01 · L’embuscade</small></button>
@@ -5229,7 +5235,7 @@ $('o-pause').addEventListener('click',()=>{if(TOUCH&&paused)$('b-pause').click()
 // gestes système d'iOS : pas de zoom de page, pas de loupe, pas de rebond
 ['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('touchmove',e=>{if(e.touches.length>1||!(e.target.closest&&e.target.closest('.overlay,.ctl')))e.preventDefault();},{passive:false});
+document.addEventListener('touchmove',e=>{if(e.touches.length>1||!(e.target.closest&&e.target.closest('.overlay,.ctl,.vt-ov,.vt-modal,#ops-dos,#dr-help,.vt-scroll')))e.preventDefault();},{passive:false});
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 // plein écran (iPad, Android, ordinateurs ; l'iPhone passe par « Sur l'écran d'accueil »)
 {const de=document.documentElement,can=document.fullscreenEnabled||document.webkitFullscreenEnabled,b=$('b-fs');if(can&&b){b.hidden=false;b.addEventListener('click',()=>{const fs=document.fullscreenElement||document.webkitFullscreenElement;
@@ -6446,7 +6452,7 @@ if(AEGIS_EMBED){const b=document.createElement('button');b.className='cta alt';b
 // → 3 INTERVENTION (QRF, demandes d'appui feu). Le monde : piste nord (−z), poste Kilo-Deux (z 0), village (z −700),
 // ferme (z −724, 52 m à l'est), crête de l'oued Sarim en L (z −1200 à −1320, 50 m à l'est).
 // =====================================================================================
-const VT_VERSION='0.2';
+const VT_VERSION='0.3';
 const VZ={fob:0,qrf0:38,vil:-700,cmp:-724,cmpL:52,site:-1262,ied:-1195,nestA:-1226,nestB:-1284,hideA:-1238,hideB:-1268,fire:-1338,look:-1352,
   stopC:-1206,stopCI:-1150,stopB:-920,gap:-1253,eta:840};
 const vx=(z,l)=>pathX(z)+l;
@@ -7095,7 +7101,7 @@ buildCrewUI();resetGame();refreshContinue();setRadioMode(RADIO.mode);applyQualit
 requestAnimationFrame(frame);
 })();
 </script>
-<!-- NOTE-INTERNE (Claude uniquement) — AEGIS PROTOCOL : VAUTOUR v0.2, F.S.M Game House (nouveau jeu, octobre 2026)
+<!-- NOTE-INTERNE (Claude uniquement) — AEGIS PROTOCOL : VAUTOUR v0.3, F.S.M Game House (nouveau jeu, octobre 2026)
 Origine : refonte totale d'AEGIS PROTOCOL : DUSTLINE v6.2 en jeu « drone seul ». Le moteur Dustline est conservé tel quel (WebGL2, véhicules, figurants, village vivant v6.2, radio, musique, poste capteur Vautour 09) ; seule la couche de jeu change. Dustline 6.2 reste un jeu séparé.
 Principe : le joueur est l'opérateur capteur de Vautour 09. Surveillance d'un groupe armé, renseignement (captures), rapport, envoi de la QRF RAPACE (ALPHA + FSM02 = player + esc.v, pilotés par l'IA), frappes UNIQUEMENT sur demande d'une unité au sol (OPS.req).
 Repères (grep) :
@@ -7110,7 +7116,8 @@ Repères (grep) :
   · Interface : opsUI (HUD #vt-hud : #ops-top, #ops-obj, #ops-dos, #ops-req), opsOSD (ajouts à l'OSD : éclair de capture, marqueur de demande), opsBanner, menus opsShow (vt-title, vt-ops, vt-brief, vt-set, vt-pause, vt-debrief), opsTitleCam (fond du titre = flux IR en direct sur la ferme), opsStart, opsPause, opsToTitle, opsKeyDown, opsInit (indicatifs radio : EPERVIER = CENTRE OPS, VAUTOUR = PILOTE, P1 = RAPACE, HOSTILE = ROEM).
 - Patches dans le moteur (chercher « OPS. ») : pedFull (q.arm fusil/rpg, q.slung, gilet, poses 'mains' et 'caisse'), pushPed (LOD drone DRW, corps au sol pedDead), buildDrawList / routeDraw / render / renderFov / updateCamera (vue drone aussi au titre), updateStage / stageLots / stagePeds / ensureStages / pedsRefresh, moveVehicle (opsDrive), simulate (holdFire, pas de tempête de sable), driveHumvee, updateCivilians / updateBanter / updateRespite / updateOrders neutralisés, radioEvent filtré (OPS.rev), droneInhibit, droneArmToggle, droneW (missiles seuls, 4 AGM), updateDroneFlight → opsDroneFlight (orbite recentrée sur la zone d'intérêt, DRONE_ORBIT R 300 / alt 250), osdFrame (panneaux à éviter), droneSyncPad, frame (opsSnap, opsUI), clavier, visibilitychange.
 - Ancienne interface Dustline : conservée cachée dans #legacy (le code y écrit encore : journal, HUD, boutons de réglage cliqués par les réglages Vautour).
-- Version : VT_VERSION (module), <title>, « VERSION 0.2 » du titre, nom de fichier AEGIS_VAUTOUR_0_2.html (build : VER et OUT dans build.py).
+- Version : VT_VERSION (module), <title>, « VERSION 0.3 » du titre, nom de fichier AEGIS_VAUTOUR_0_3.html (build : VER et OUT dans build.py).
+v0.3 — MENUS TACTILES : le garde-fou touchmove hérité de Dustline (preventDefault hors .overlay/.ctl) bloquait tout défilement des menus Vautour sur iPad ; liste blanche étendue (.vt-ov, .vt-modal, #ops-dos, #dr-help, .vt-scroll) dans build.py ; ops.css : touch-action pan-y sur les menus, alignement par marges auto (un menu plus haut que l'écran n'est plus coupé en haut).
 v0.2 — INDICATIF VAUTOUR 09 : le drone s'appelle Vautour 09 (remplacement « Vautour 09 » → « Vautour 09 » en fin de construction, build.py) ; le jeu reste AEGIS PROTOCOL : VAUTOUR ; la clé radio interne 'VAUTOUR' (CALLS.VAUTOUR = PILOTE) et la clé localStorage 'vautour-m1' sont inchangées.
 v0.2 — CINÉMATIQUE : bloc « CINÉMATIQUE D'INTRODUCTION » (CINE, CINE_SHOTS : 8 plans d, hf, eye(u), look(u), tag, cap, say, drone, hum, title, ir, link) ; opsCine (monde prêt en état 'title' + OPS.cine), opsCineCam (appelée par updateCamera à la place d'opsTitleCam), opsCineShot, opsCineEnd → opsGo(false) ; drone MALE dessiné par crochet (cineDronePos), lanterne de la ferme OPS.lamp (+ lumière dans gatherLights) ; surimpressions #vt-cine (bandes, ouverture au noir, étiquette de lieu, sous-titres tapés, carton titre, « LIAISON VAUTOUR 09 », PASSER). opsStart(true) = cinématique (bouton PRENDRE LE POSTE du briefing) ; Recommencer et Rejouer = opsStart(false) sans cinématique.
 v0.2 — BOMBES GUIDÉES LOURDES : bloc « v0.2 · BOMBES » (DRONE_WEAPONS.BOMBE 'GBU', 2 à bord ; OPS.wpn, opsWeapToggle via droneWeaponToggle, bouton #dp-weap dans la grappe d'armement ; branche BOMBE en tête de l'arme dans updateDroneGun → opsDropBomb ; BOMBS, updateBombs (Bézier guidée), opsBombBoom : explode R 30, chaîne d'explosions, onde de choc, poussière, éclair blanc OSD OPS.bflash). Règles : bombe interdite à < 120 m des amis, danger proche < 300 m, civils 75 m (opsInhibit).
