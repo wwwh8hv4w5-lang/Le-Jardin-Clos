@@ -1,107 +1,101 @@
-# Aegis Protocol : Épervier
+# AEGIS PROTOCOL : VAUTOUR
 
-Simulation de drone **MALE** armé (Medium Altitude Long Endurance) — vous êtes l’**opérateur capteurs** du drone **ÉPERVIER 21**.
+**v0.2 « DUSTLINE »** — simulation d'opérateur de drone **MALE** : interception de drones ennemis, appui aérien rapproché et conduite d'un réseau d'escouades au sol.
 
-**Version 2.8** · F.S.M Game House
+Vous êtes l'**opérateur du drone VAUTOUR 09** au-dessus de la zone charnière **TALIS-V** (région de MERIK), face à l'**AVO**. · F.S.M Game House
 
-> Ancien dépôt *Le-Jardin-Clos* / *Prairie Orbitale* : le code a été entièrement remplacé par ce jeu de drone (moteur issu de *Naval Strike Simulation* / *Darksea*).
+> Ce dépôt (*Le-Jardin-Clos*) héberge l'actuel volet de la série Aegis Protocol ; le volet précédent *Épervier 2.8* reste accessible dans l'historique git. Auparavant : *Le Jardin clos*, *Prairie Orbitale*.
 
 ## Jouer
 
 Ouvre `index.html` dans un navigateur récent **avec WebGL2** (Chrome, Edge, Firefox, Safari récents).  
 Tout le jeu tient dans ce seul fichier : aucun serveur, aucune installation.
 
-### Mettre le jeu en ligne avec GitHub Pages
+**GitHub Pages** — Settings → Pages → *Deploy from a branch* → branche `main` → dossier `/ (root)` :  
+`https://wwwh8hv4w5-lang.github.io/Le-Jardin-Clos/`
 
-1. Les fichiers sont déjà à la racine de ce dépôt.
-2. **Settings → Pages** → Source : *Deploy from a branch* → branche `main` → dossier `/ (root)`.
-3. Après une minute : `https://wwwh8hv4w5-lang.github.io/Le-Jardin-Clos/`
+## Le concept
 
-## Concept
+- **Fréquence nerveuse** : le Vautour 09 évolue en **orbite elliptique à 4 000 m** ; la boule optronique (EOS / IR / mode actif) couvre une zone de **~35 km²** — montagnes au nord, champs au sud, villes et points de contrôle à l'ouest, la route ÉTAT 03 et la route côtière vers l'est.
+- **Interception de drones AVO** : chaque drone hostile (kamikaze **ATT**, bombardier **ASM**, reconnaissance **PRD**) franchit jusqu'à **3 lignes de croisement**. Visez le segment d'interception prédit (**MAC**) et tirez au bon moment — marge d'erreur ~2 s, confirmation ~2 s après l'impact. Sans balisage actif ni suivi constant, l'interception est très difficile : les détecteurs ne les voient qu'au moment de l'impact.
+- **Alerte MWS** : l'alerte jaune signale les missiles détectés, l'alarme rouge que le drone est frappé.
+- **Soutien au sol** : votre détachement **Alpha** tient une position (RAMNAY) et des escouades amies déclenchent la bataille — appui-feu, marquage laser, maintien de la ligne d'arrêt « SILENCE » à la frontière (ligne de retenue « DIGNITÉ », soutien déclaré « toutes les terres »).
 
-Vous pilotez la **boule optronique** (TV · IR · illumination laser) d’un drone en orbite (~4 500 m).  
-L’état-major (**AQUILA**) vous donne des ordres. Vous devez :
+## L'escadron FSM
 
-1. **Observer** le terrain (routes, villages, convois, civils, forces hostiles)
-2. **Identifier** les cibles (zoom fort, centrage, PID)
-3. Demander une **autorisation de tir** (règles d’engagement, CDE — dommages collatéraux estimés)
-4. **Désigner au laser** et frapper (MAS-L, BGL-250 / BGL-1000, BPG-110, canon selon charge)
-5. **Dévier** si des civils entrent dans la zone pendant le vol de la munition
+| Véhicule | Rôle |
+|----------|------|
+| **Alpha** — Humvee | Votre escouade, stationnée à RAMNAY |
+| **FSM02** — Humvee | Escorte |
+| **FSM03** | Renfort blindé |
+| **APC M3** (8 roues) | Blindé de transport, plus tard dans la campagne |
 
-Le **tir libre** (sans autorisation) est possible mais a des conséquences : violations des règles d’engagement et désobéissance consignées au rapport de mission.
+**Alpha** — Silex (Sergent-chef Karim Benali, mitrailleur M134) · Écho (Caporal-chef Thomas Lerat, pilote, HK416F + LG) · Rapace (Capitaine Hélène Marest, chef de détachement, HK416F, MMP) · Dogue (Sergent Victor Ancel, grenadier, HK416F + LG 6 coups).
 
-## Drones (hangar)
+**FSM02** — Brume (mitrailleur M2 12,7 mm) · Talus (pilote) · Orage (chef de bord, HK416F, AT4) · Cendre (grenadière, HK416F + LG).
 
-Six plateformes sélectionnables, chacune avec ses munitions, capteurs et spécialités :
+**Chaîne de commandement** : ordonnances du général **DESCHAMPS** ; chef d'état-major **colonel WEIT** (QRF) ; support **FUMBLE** — « Toutes les terres ».
 
-| Drone | Type | Particularités |
-|-------|------|----------------|
-| **ÉPERVIER** | MALE armé (type MQ-9A) | Le polyvalent : 4 MAS-L, 2 BGL-250, canon — désignation laser |
-| **FAUCON** | MALE allongé (type MQ-9B) | Tir en salve (2 munitions en vol), zoom ×1,6, identification plus rapide |
-| **VAUTOUR** | MALE lourd bipoutre (type Heron TP) | **SIGINT** : intercepte téléphones et radios, révèle les hostiles cachés |
-| **GRIFFON** | Drone à réaction (type Avenger) | Turboréacteur, soute furtive, bombes planantes BPG-110, repositionnement rapide |
-| **ORQUE** | HALE de surveillance (type RQ-4) | Non armé : surveillance grand champ, zoom ×2,2, +1 demande de soutien |
-| **MANTA** | Aile volante furtive (type nEUROn) | Infrarouge refroidi qui voit sous les arbres, emporte la BGL-1000, orbite basse |
+## Campagne (missions)
 
-## Missions
+| Code | Titre |
+|------|-------|
+| M1 | SUPERVISEUR — interception d'un drone de reconnaissance AVO sur un village éloigné |
+| M2 | SIGNAL — effondrement du réseau, sauvetage de l'escorte FSM02 |
+| M3 | OPENING — réveil du réseau, attaque en embuscade |
+| M4 | POINT DE PASSEMENT — col frontalier, infanterie lourde |
+| M5 | STRICT ORDER — reconquête de RAMNAY, coup de théâtre |
+| M6 | CONTINUITY — défense du centre de commandement de l'unité |
+| M7 | TOTAL WAR — bataille de la frontière : infanterie, APC, blindés |
+| M8 | END OF ALL — dernière défense du « vestibule de la paix » |
 
-| Code | Titre | Ambiance |
-|------|--------|----------|
-| ÉPERVIER 1 | Vent de sable | Désert, convoi armé, hameau civil interdit de tir |
-| ÉPERVIER 2 | Lisière | Danger close, amis au contact, JTAC |
-| ÉPERVIER 3 | Médina | Ville dense, marché, CDE stricte |
-| ÉPERVIER 4 | Nuit noire | Opération de nuit |
-| ÉPERVIER 5 | Fer de lance | Chef de réseau à capturer vivant, convoi de missiles, frontière |
-| PATROUILLE | Patrouille libre | Mode libre |
+**Batailles spéciales** : E1 ESTUARY (interception de 5 drones AVO : TIMBER, EMBER, SLEDGE, CLEAVER, HAWK-1) · E2 THE BREATH (escarmouche contre hélicoptère ennemi) · E3 ACT OF WAR (frappe aérienne AVO sur le camp FSM) · E4 FORTRESS (assaut blindé AVO sur la base fortifiée).
 
-Campagne, préférences et réglages audio sauvegardés en navigateur (`aegisEpervierCampaign_v1`, `aegisEpervierPrefs_v1`, `aegisEpervierAudio_v1`).
+## Armement embarqué
 
-## Soutien disponible (selon mission)
+- **ATM** — missile air-sol (moteurs jettisonnables, guidage laser)
+- **AAM ×4** — missile air-air pour l'interception des drones
+- Villes de la zone : ROU, MERIK, KORVA (3 routes, frontière nord) — les infiltrations AVO y déclenchent les batailles (drapeau RVO imposé)
 
-- **Tigre 1** — hélicoptère d’attaque (canon 30 mm, missile antichar, n’engage que vos cibles identifiées)
-- **Renfort terrestre** — barrage routier, patrouille blindée VIPERE, groupe d’interpellation
-- **Médical** — medevac, QRF
-- **Illumination** — éclairage du secteur de nuit
+## Commandes
 
-## Commandes principales
+| Action | Touche |
+|--------|--------|
+| Orienter la caméra | Souris |
+| Zoom / FOV | Molette (niveaux 1–2–4–8–16) |
+| Choisir un point de vue | Clic |
+| Choisir le drone de rechange | Clic droit |
+| Systèmes clés | `Verr maj` |
+| Mode IR | `I` |
+| Choisir les cibles | `R` |
+| Radar / actu | `T` |
+| Engagement | `Y` |
+| Tir immédiat (TIR) | `B` |
+| MWS actif | `V` |
+| Répéter le briefing | `H` |
+| Messages | `G` |
+| Retour au HQ | `M` |
+| Vos ordres | `N` |
+| Fusée éclairante | `K` |
+| Réveil automatique | `P` |
+| Plein écran | `F11` |
 
-| Action | Souris / tactile | Clavier |
-|--------|------------------|---------|
-| Orienter la boule (slew) | Glisser sur l’image | — |
-| Zoomer | Molette / pincer | — |
-| Pointer la carte | Toucher la carte | — |
-| Sélectionner une cible | Clic / toucher | — |
-| Poursuivre (track) | Double-clic | — |
-| Identifier | Bouton **IDENTIFIER** | — |
-| Demander l’autorisation | Bouton **AUTORISATION** | `C` |
-| Laser | Bouton **LASER** | `L` |
-| Tir (maintenir) | Bouton **TIR** | `F` / `Espace` |
-| Déviation (laser en zone vide) | Bouton **DÉVIATION** | `X` |
-| Tir libre | Bouton **TIR LIBRE** | `G` |
-| Choisir la munition | Boutons de charge | `1` – `4` |
-| Vision TV / IR | Boutons de mode | `V` |
-| Contact suivant | Bouton **SUIVANT** | `N` |
-| Recentrer la visée | Bouton de centrage | `R` |
-| Pause | — | `Échap` / `P` |
+## Feuille de route v0.3 « LE DÉBARQUEMENT »
 
-Interface pensée pour desktop et mobile (HUD fire-control, carte 2D, briefings).
-
-## Armement (selon drone / mission)
-
-- **MAS-L** — missile air-sol léger (guidage laser)
-- **BGL-250** / **BGL-1000** — bombes guidées laser (250 kg / 1 000 kg)
-- **BPG-110** — bombe planante de petit diamètre, faibles dommages collatéraux (GRIFFON, MANTA)
-- **Canon / minigun** — gerbe tirée en rafale ou au maintien (selon charge)
-- Modes : désignation laser, caméra munition (autodirecteur), déviation en zone vide
+- Identification fine des cibles au sol, accompagnement rapproché des soldats au sol
+- Compte de munitions et gestion des stocks
+- Compagnie K : 1 porte-drone + 2 drones assaillants
+- Écran des membres d'équipage, standard de commandement d'infanterie, messages d'urgence
+- IA commander : réponses passives, aide au placement, navigation des cibles ennemies, contrôles tactiques
+- Événement spécial de fin de campagne : élimination du chef d'état-major AVO — ou nouvel acteur ?
 
 ## Technique
 
-- Rendu **WebGL2** (moteur custom issu de Naval Strike 3.1 / protocole Aegis)
-- Échelle : 1 unité ≈ 10 m
-- Drone en orbite (rayon ~380 u, altitude ~450 u)
-- Monde généré par mission (terrain, routes, bâtiments, végétation, IA véhicules / personnes)
-- Cycle jour / nuit, météo, vision TV / IR, ombres centrées sur la visée
-- Sauvegarde campagne navigateur
+- **Runtime « Naval Strike Simulation » v1.2.4** (moteur custom WebGL2)
+- Échelle : 1 unité ≈ 10 m ; drone en orbite elliptique à 4 000 m
+- Monde généré par mission : terrain, routes, bâtiments, végétation, IA véhicules/personnes
+- Vision EOS / IR / mode actif, ombres centrées sur la visée, MWS
+- Sauvegarde de campagne navigateur (`APVAUTOUR_SAVE`)
 
 ## Fichiers
 
@@ -112,10 +106,10 @@ Interface pensée pour desktop et mobile (HUD fire-control, carte 2D, briefings)
 
 ## Crédits
 
-- **Jeu** : F.S.M Game House  
-- **Moteur 3D** : base *Naval Strike Simulation 3.1* / protocole Aegis (Darksea)  
-- **Titre** : Aegis Protocol : Épervier  
+- **Jeu** : F.S.M Game House / FERAL SYSTEM MEDIA
+- **Moteur 3D** : base *Naval Strike Simulation* (Darksea) / protocole Aegis
+- **Titre** : Aegis Protocol : Vautour
 
 ---
 
-*Prototype de simulation d’engagement aérien de précision. Aucun lien avec des opérations réelles.*
+*Prototype de simulation d'engagement aérien de précision. Aucun lien avec des opérations réelles.*
